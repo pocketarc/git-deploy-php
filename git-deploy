@@ -1,7 +1,8 @@
+#!/usr/bin/php
 <?php
 
 if (isset($argv[1])) {
-    $deploy = $argv[1];
+    $deploy = $argv[1].'.ini';
 } else {
     $deploy = 'deploy.ini';
 }

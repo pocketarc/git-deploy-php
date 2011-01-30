@@ -1,0 +1,54 @@
+git-deploy-php
+==============
+
+Description
+-----------
+
+git-deploy-php allows quick and easy deployments of Git repositories to FTP servers.
+
+It was created to simplify the process of deploying projects to shared hosting environments, and to save bandwidth, by only uploading the files that have changed.
+
+Usage
+-----
+
+Using git-deploy-php could not be easier.
+
+1. Drop git-deploy into your project.
+2. Create the deploy.ini file (see below).
+3. `php git-deploy`
+
+And there you go. It's that simple.
+
+### deploy.ini
+
+In the root directory of your source code, create a deploy.ini file.
+
+Note: deploy.ini is the default file's name. You can name it `staging.ini`, for example, and call `php git-deploy staging`. I think that that serves as an easy way to separate the deployment to staging and production servers.
+
+    ; This is a sample deployment file.
+    
+    [example]
+    
+    skip = false
+    user = example
+    pass = password
+    host = example.com
+    port = 21
+    path = /path/to/installation
+    passive = true
+    
+    ; If that seemed too long for you, you can specify servers like this:
+    [ftp://example:password@example.com:21/path/to/installation]
+
+The first time it's executed, git-deploy will assume that your deployment server is empty, and will upload all the files in the git repository.
+If you've already deployed your project's files previously, you have to create a REVISION file on your deployment server, containing the hash of the revision it's currently in.
+
+To get the hash of the current revision, you can use:
+
+    git rev-parse HEAD
+
+How It Works
+------------
+git-deploy stores file called REVISION on your server inside the root path to your application. This file stores the current revision of your application residing on your server.
+
+When you run a git deploy, git-deploy downloads the REVISION file, and checks to see what files are different between revisions and either upload the changed files or deletes them from the server.
