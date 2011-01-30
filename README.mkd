@@ -13,19 +13,19 @@ Usage
 
 Using git-deploy-php could not be easier.
 
-1. Drop git-deploy into your project.
-2. Create the deploy.ini file (see below).
-3. `php git-deploy`
+1. Drop `git-deploy` into your project.
+2. Create the `deploy.ini` file (see below).
+3. Execute `php git-deploy`
 
 And there you go. It's that simple.
 
 ### deploy.ini
 
-In the root directory of your source code, create a deploy.ini file.
+In the root directory of your source code, create a `deploy.ini` file.
 
-Note: deploy.ini is the default file's name. You can name it `staging.ini`, for example, and call `php git-deploy staging`. I think that that serves as an easy way to separate the deployment to staging and production servers.
+Note: `deploy.ini` is the default file's name. You can name it `staging.ini`, for example, and execute `php git-deploy staging`. That serves as an easy way to separate the deployment to staging and production servers.
 
-    ; This is a sample deployment file.
+    ; This is a sample deploy.ini file.
     
     [example]
     
