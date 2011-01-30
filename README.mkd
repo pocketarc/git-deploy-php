@@ -52,3 +52,9 @@ How It Works
 git-deploy stores file called REVISION on your server inside the root path to your application. This file stores the current revision of your application residing on your server.
 
 When you run a git deploy, git-deploy downloads the REVISION file, and checks to see what files are different between revisions and either upload the changed files or deletes them from the server.
+
+Suggestions, questions and complaints.
+----------
+
+If you've got any suggestions, questions, or anything you don't like about git-deploy-php, [create an issue](https://github.com/BrunoDeBarros/git-deploy-php/issues). I'd really appreciate your feedback.
+Feel free to fork this project, if you want to contribute to it. 
