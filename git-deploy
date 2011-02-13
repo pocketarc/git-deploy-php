@@ -118,14 +118,28 @@ function deployGitOverFtp($host, $user = '', $pass = '', $port = 21, $path = '/'
         foreach ($filesToUpload as $file) {
             # Make sure the folder exists in the FTP server.
 
-            $origin = ftp_pwd($connection);
-            $dir = dirname($file);
+            $dir = split("/", dirname($file));
+            $path = "";
+            $ret = true;
 
-            if (!@ftp_chdir($connection, $dir)) {
-                ftp_mkdir($connection, $dir);
+            for ($i = 0; $i < count($dir); $i++) {
+                $path.= $dir[$i] . '/';
+
+                $origin = ftp_pwd($connection);
+
+                if (!@ftp_chdir($connection, $path)) {
+                    if (!@ftp_mkdir($connection, $path)) {
+                        $ret = false;
+                        echo "Failed to create '$path'.\r\n";
+                        echo "A problem occurred while attempting to create a folder. Upload to this server cannot continue.\r\n";
+                        return;
+                    } else {
+                        echo "Created directory '$path'.\r\n";
+                    }
+                }
+
+                ftp_chdir($connection, $origin);
             }
-
-            ftp_chdir($connection, $origin);
 
             ftp_put($connection, $file, $file, FTP_BINARY);
             echo "Uploaded {$file}\r\n";
