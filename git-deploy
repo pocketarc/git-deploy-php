@@ -232,7 +232,7 @@ class Terra_Git {
             }
 
             foreach ($filesToDelete as $file) {
-                ftp_delete($connection, $file);
+                @ftp_delete($connection, $file);
                 echo "Deleted {$file}\r\n";
             }
 
