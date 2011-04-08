@@ -6,23 +6,74 @@ if (isset($argv[1])) {
     $deploy = 'deploy.ini';
 }
 
-if (!@file_exists($deploy)) {
-    throw new Exception("File '$deploy' does not exist.");
-} else {
-    $servers = parse_ini_file($deploy, true);
-    if (!$servers) {
-        throw new Exception("File '$deploy' is not a valid .ini file.");
+$list = false;
+
+foreach ($argv as $arg) {
+    if ($arg == '-list') {
+        $list = true;
     }
 }
 
-foreach ($servers as $uri => $options) {
+try {
+    $git = new Terra_Git();
+    $git->setDeployFile($deploy);
+    if (!$list) {
+        $git->deploy();
+    } else {
+        $files = $git->getFilesToUpload();
+        if (count($files['upload']) > 0) {
+            echo "Files to upload:\n";
+            foreach ($files['upload'] as $fileToUpload) {
+                echo $fileToUpload . "\n";
+            }
+        }
+        
+        if (count($files['delete']) > 0) {
+            echo "Files to delete:\n";
+            foreach ($files['delete'] as $fileToDelete) {
+                echo $fileToDelete . "\n";
+            }
+        }
+    }
+} catch (Exception $e) {
+    echo $e->getMessage();
+}
 
-    if (substr($uri, 0, 6) === 'ftp://') {
-        $options = array_merge($options, parse_url($uri));
+# That's it. Just a few lines for the command line tool. The rest is part of Terra_Git. Yay for modularisation.
+# However, I still think that deployGitOverFtp could use an overhaul, and obviously it should be possible to configure whether to print output or not.
+# Maybe even make the output more detailed. Maybe return an array containing details of the upload. Who knows.
+
+class Terra_Git {
+
+    protected $filesToIgnore = array(
+        'git-deploy',
+        '.gitignore',
+    );
+    protected $servers = array();
+
+    function setDeployFile($deploy) {
+        if (!@file_exists($deploy)) {
+            throw new Exception("File '$deploy' does not exist.");
+        } else {
+            $servers = parse_ini_file($deploy, true);
+            if (!$servers) {
+                throw new Exception("File '$deploy' is not a valid .ini file.");
+            } else {
+                $this->addServers($servers);
+            }
+        }
+        $this->ignoreFile($deploy);
     }
 
-    # Throw in some default values, in case they're not set.
-    $options = array_merge(array(
+    function addServers($servers) {
+        foreach ($servers as $uri => $options) {
+
+            if (substr($uri, 0, 6) === 'ftp://') {
+                $options = array_merge($options, parse_url($uri));
+            }
+
+            # Throw in some default values, in case they're not set.
+            $options = array_merge(array(
                 'skip' => false,
                 'host' => '',
                 'user' => '',
@@ -32,66 +83,23 @@ foreach ($servers as $uri => $options) {
                 'passive' => true
                     ), $options);
 
-    if ($options['skip']) {
-        continue;
+            if ($options['skip']) {
+                continue;
+            } else {
+                $this->servers[$uri] = $options;
+            }
+        }
     }
 
-    deployGitOverFtp($options['host'], $options['user'], $options['pass'], $options['port'], $options['path'], $options['passive']);
-}
-
-function deployGitOverFtp($host, $user = '', $pass = '', $port = 21, $path = '/', $passive = true) {
-
-    # Let's make sure the $path ends with a slash.
-
-    if (substr($path, strlen($path) - 1, strlen($path)) !== '/') {
-        $path = $path . '/';
+    function ignoreFile($file) {
+        $this->filesToIgnore[] = $file;
     }
 
-    $pathsThatExist = array();
-
-    # Okay, let's connect to the server.
-
-    $connection = @ftp_connect($host, $port);
-
-    if (!$connection) {
-        throw new Exception("Could not connect to $host.");
-    } else {
-
-        if (!@ftp_login($connection, $user, $pass)) {
-            throw new Exception("Could not login to $host (Tried to login as $user).");
-        }
-
-
-        ftp_pasv($connection, $passive);
-
-        if (ftp_chdir($connection, $path)) {
-
-        } else {
-            throw new Exception("Could not change the FTP directory to $path.");
-        }
-
-        echo "----------------------------\r\n";
-        echo "Connected to {$host}{$path}\r\n";
-        echo "----------------------------\r\n";
-
-        # Now that we're logged in to the server, let's get the remote revision.
-
-        $remoteRevision = '';
-
-        $tmpFile = tmpfile();
-
-        if (@ftp_fget($connection, $tmpFile, 'REVISION', FTP_ASCII)) {
-            fseek($tmpFile, 0);
-            $remoteRevision = trim(fread($tmpFile, 1024));
-            fclose($tmpFile);
-        } else {
-            # Couldn't get the file. I assume it's because the file didn't exist.
-        }
-
+    function getFilesToUpload($targetRevision = null) {
         # Get the list of files to update.
 
-        if (!empty($remoteRevision)) {
-            $command = "git diff --name-status {$remoteRevision}...HEAD";
+        if (!empty($targetRevision)) {
+            $command = "git diff --name-status {$targetRevision}...HEAD";
         } else {
             $command = "git ls-files";
         }
@@ -102,7 +110,7 @@ function deployGitOverFtp($host, $user = '', $pass = '', $port = 21, $path = '/'
         $filesToUpload = array();
         $filesToDelete = array();
 
-        if (!empty($remoteRevision)) {
+        if (!empty($targetRevision)) {
             foreach ($output as $line) {
                 if ($line[0] == 'A' or $line[0] == 'C' or $line[0] == 'M') {
                     $filesToUpload[] = trim(substr($line, 1, strlen($line)));
@@ -116,54 +124,125 @@ function deployGitOverFtp($host, $user = '', $pass = '', $port = 21, $path = '/'
             $filesToUpload = $output;
         }
 
-        foreach ($filesToUpload as $file) {
-            # Make sure the folder exists in the FTP server.
+        foreach ($filesToUpload as $key => $file) {
+            if (in_array($file, $this->filesToIgnore)) {
+                unset($filesToUpload[$key]);
+            }
+        }
 
-            $dir = split("/", dirname($file));
-            $path = "";
-            $ret = true;
+        return array(
+            'upload' => $filesToUpload,
+            'delete' => $filesToDelete
+        );
+    }
 
-            for ($i = 0; $i < count($dir); $i++) {
-                $path.= $dir[$i] . '/';
+    function deploy() {
+        foreach ($this->servers as $server) {
+            $this->deployGitOverFtp($server['host'], $server['user'], $server['pass'], $server['port'], $server['path'], $server['passive']);
+        }
+    }
 
-                if (!isset($pathsThatExist[$path])) {
-                    $origin = ftp_pwd($connection);
+    function deployGitOverFtp($host, $user = '', $pass = '', $port = 21, $path = '/', $passive = true) {
 
-                    if (!@ftp_chdir($connection, $path)) {
-                        if (!@ftp_mkdir($connection, $path)) {
-                            $ret = false;
-                            echo "Failed to create '$path'.\r\n";
-                            echo "A problem occurred while attempting to create a folder. Upload to this server cannot continue.\r\n";
-                            return;
-                        } else {
-                            echo "Created directory '$path'.\r\n";
-                            $pathsThatExist[$path] = true;
-                        }
-                    } else {
-                        $pathsThatExist[$path] = true;
-                    }
+        # Let's make sure the $path ends with a slash.
 
-                    ftp_chdir($connection, $origin);
-                }
+        if (substr($path, strlen($path) - 1, strlen($path)) !== '/') {
+            $path = $path . '/';
+        }
+
+        $pathsThatExist = array();
+
+        # Okay, let's connect to the server.
+
+        $connection = @ftp_connect($host, $port);
+
+        if (!$connection) {
+            throw new Exception("Could not connect to $host.");
+        } else {
+
+            if (!@ftp_login($connection, $user, $pass)) {
+                throw new Exception("Could not login to $host (Tried to login as $user).");
             }
 
-            ftp_put($connection, $file, $file, FTP_BINARY);
-            echo "Uploaded {$file}\r\n";
+
+            ftp_pasv($connection, $passive);
+
+            if (ftp_chdir($connection, $path)) {
+                
+            } else {
+                throw new Exception("Could not change the FTP directory to $path.");
+            }
+
+            echo("----------------------------\r\n");
+            echo "Connected to {$host}{$path}\r\n";
+            echo "----------------------------\r\n";
+
+            # Now that we're logged in to the server, let's get the remote revision.
+
+            $remoteRevision = '';
+
+            $tmpFile = tmpfile();
+
+            if (@ftp_fget($connection, $tmpFile, 'REVISION', FTP_ASCII)) {
+                fseek($tmpFile, 0);
+                $remoteRevision = trim(fread($tmpFile, 1024));
+                fclose($tmpFile);
+            } else {
+                # Couldn't get the file. I assume it's because the file didn't exist.
+            }
+
+            # @todo files to upload
+
+            foreach ($filesToUpload as $file) {
+                # Make sure the folder exists in the FTP server.
+
+                $dir = split("/", dirname($file));
+                $path = "";
+                $ret = true;
+
+                for ($i = 0; $i < count($dir); $i++) {
+                    $path.= $dir[$i] . '/';
+
+                    if (!isset($pathsThatExist[$path])) {
+                        $origin = ftp_pwd($connection);
+
+                        if (!@ftp_chdir($connection, $path)) {
+                            if (!@ftp_mkdir($connection, $path)) {
+                                $ret = false;
+                                echo "Failed to create '$path'.\r\n";
+                                echo "A problem occurred while attempting to create a folder. Upload to this server cannot continue.\r\n";
+                                return;
+                            } else {
+                                echo "Created directory '$path'.\r\n";
+                                $pathsThatExist[$path] = true;
+                            }
+                        } else {
+                            $pathsThatExist[$path] = true;
+                        }
+
+                        ftp_chdir($connection, $origin);
+                    }
+                }
+
+                ftp_put($connection, $file, $file, FTP_BINARY);
+                echo "Uploaded {$file}\r\n";
+            }
+
+            foreach ($filesToDelete as $file) {
+                ftp_delete($connection, $file);
+                echo "Deleted {$file}\r\n";
+            }
+
+            $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
+            file_put_contents($temp, exec('git rev-parse HEAD'));
+            ftp_put($connection, 'REVISION', $temp, FTP_BINARY);
+            unlink($temp);
+            echo "Uploaded REVISION file\r\n";
+
+            echo "Finished working on {$host}{$path}\r\n";
+
+            ftp_close($connection);
         }
-
-        foreach ($filesToDelete as $file) {
-            ftp_delete($connection, $file);
-            echo "Deleted {$file}\r\n";
-        }
-
-        $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
-        file_put_contents($temp, exec('git rev-parse HEAD'));
-        ftp_put($connection, 'REVISION', $temp, FTP_BINARY);
-        unlink($temp);
-        echo "Uploaded REVISION file\r\n";
-
-        echo "Finished working on {$host}{$path}\r\n";
-
-        ftp_close($connection);
     }
+
 }
