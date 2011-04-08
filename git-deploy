@@ -27,7 +27,7 @@ try {
                 echo $fileToUpload . "\n";
             }
         }
-        
+
         if (count($files['delete']) > 0) {
             echo "Files to delete:\n";
             foreach ($files['delete'] as $fileToDelete) {
@@ -191,7 +191,10 @@ class Terra_Git {
                 # Couldn't get the file. I assume it's because the file didn't exist.
             }
 
-            # @todo files to upload
+            $files = $this->getFilesToUpload($remoteRevision);
+            $filesToUpload = $files['upload'];
+            $filesToDelete = $files['delete'];
+            unset($files);
 
             foreach ($filesToUpload as $file) {
                 # Make sure the folder exists in the FTP server.
@@ -233,12 +236,16 @@ class Terra_Git {
                 echo "Deleted {$file}\r\n";
             }
 
-            $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
-            file_put_contents($temp, exec('git rev-parse HEAD'));
-            ftp_put($connection, 'REVISION', $temp, FTP_BINARY);
-            unlink($temp);
-            echo "Uploaded REVISION file\r\n";
-
+            if (count($filesToUpload) > 0 or count($filesToDelete) > 0) {
+                $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
+                file_put_contents($temp, exec('git rev-parse HEAD'));
+                ftp_put($connection, 'REVISION', $temp, FTP_BINARY);
+                unlink($temp);
+                echo "Uploaded REVISION file\r\n";                
+            } else {
+                echo "No files to upload.";
+            }
+            
             echo "Finished working on {$host}{$path}\r\n";
 
             ftp_close($connection);
