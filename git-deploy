@@ -19,8 +19,8 @@ $list = isset($opts['l']);
 
 try {
     $git = new Terra_Git();
-    $git->setDeployFile($deploy);
     if (!$list) {
+        $git->setDeployFile($deploy);
         $git->deploy();
     } else {
         $files = $git->getFilesToUpload();
