@@ -6,7 +6,7 @@ Description
 
 git-deploy-php allows quick and easy deployments of Git repositories to FTP servers.
 
-It was created to simplify the process of deploying projects to shared hosting environments, and to save bandwidth, by only uploading the files that have changed.
+It was created to simplify the process of deploying projects to shared hosting environments where shell access is not available, and to save bandwidth, by only uploading the files that have changed.
 
 Usage
 -----
@@ -15,7 +15,7 @@ Using git-deploy-php could not be easier.
 
 1. Drop `git-deploy` into your project.
 2. Create the `deploy.ini` file (see below).
-3. Execute `php git-deploy`
+3. Execute `php git-deploy`.
 
 And there you go. It's that simple.
 
@@ -23,7 +23,7 @@ And there you go. It's that simple.
 
 In the root directory of your source code, create a `deploy.ini` file.
 
-Note: `deploy.ini` is the default file's name. You can name it `staging.ini`, for example, and execute `php git-deploy staging`. That serves as an easy way to separate the deployment to staging and production servers.
+*Note: `deploy.ini` is the default file's name. You can name it `staging.ini`, for example, and execute `php git-deploy staging`. That serves as an easy way to separate the deployment to staging and production servers.*
 
     ; This is a sample deploy.ini file.
     
@@ -46,6 +46,21 @@ If you've already deployed your project's files previously, you have to create a
 To get the hash of the current revision, you can use:
 
     git rev-parse HEAD
+
+Advanced Usage
+--------------
+
+### List files to upload and delete
+
+Sometimes, you may just want to see what files are to be uploaded to the FTP server, and which ones are to be deleted. In this case, you can use `-l` (lowercase L):
+
+    php git-deploy [your_ini_file_name] -l
+
+If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), then you can simply use:
+
+    php git-deploy -l
+
+Pretty simple, huh?
 
 How It Works
 ------------
