@@ -1,18 +1,21 @@
 #!/usr/bin/php
 <?php
+
+$commands = array('-l');
+
 if (isset($argv[1])) {
-    $deploy = $argv[1] . '.ini';
+    if (!in_array($argv[1], $commands)) {
+        $deploy = $argv[1] . '.ini';
+    } else {
+        $deploy = 'deploy.ini';
+    }
 } else {
     $deploy = 'deploy.ini';
 }
 
-$list = false;
+$opts = getopt("l");
 
-foreach ($argv as $arg) {
-    if ($arg == '-list') {
-        $list = true;
-    }
-}
+$list = isset($opts['l']);
 
 try {
     $git = new Terra_Git();
@@ -38,10 +41,6 @@ try {
 } catch (Exception $e) {
     echo $e->getMessage();
 }
-
-# That's it. Just a few lines for the command line tool. The rest is part of Terra_Git. Yay for modularisation.
-# However, I still think that deployGitOverFtp could use an overhaul, and obviously it should be possible to configure whether to print output or not.
-# Maybe even make the output more detailed. Maybe return an array containing details of the upload. Who knows.
 
 class Terra_Git {
 
