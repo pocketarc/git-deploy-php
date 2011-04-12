@@ -1,7 +1,18 @@
 #!/usr/bin/php
 <?php
 
-$commands = array('-l');
+/*
+ * @todo log all output in file
+ * @todo command to set file
+ * @todo command to set whether to print or not
+ * @todo command to ignore arbitrary files
+ * @todo command to update to specific revision (including previous, see issue #8)
+ * @todo see if it ends in .ini, and if it does, don't append .ini
+ */Output Function, Arbitrary Revision, Submodules and help command.
+
+Began work on a bunch of issues. Also added a -h to help out with the command, but
+
+$commands = array('-l', '-r');
 
 if (isset($argv[1])) {
     if (!in_array($argv[1], $commands)) {
@@ -13,28 +24,29 @@ if (isset($argv[1])) {
     $deploy = 'deploy.ini';
 }
 
-$opts = getopt("l");
+$opts = getopt("lr:");
 
 $list = isset($opts['l']);
+$revision = isset($opts['r']) ? $opts['r'] : 'HEAD';
 
 try {
     $git = new Terra_Git();
     if (!$list) {
         $git->setDeployFile($deploy);
-        $git->deploy();
+        $git->deploy($revision);
     } else {
         $files = $git->getFilesToUpload();
         if (count($files['upload']) > 0) {
-            echo "Files to upload:\n";
+            $git->output("Files to upload:");
             foreach ($files['upload'] as $fileToUpload) {
-                echo $fileToUpload . "\n";
+                $git->output($fileToUpload);
             }
         }
 
         if (count($files['delete']) > 0) {
-            echo "Files to delete:\n";
+            $git->output("Files to delete:");
             foreach ($files['delete'] as $fileToDelete) {
-                echo $fileToDelete . "\n";
+                $git->output($fileToDelete);
             }
         }
     }
@@ -48,7 +60,26 @@ class Terra_Git {
         'git-deploy',
         '.gitignore',
     );
+    
+    protected $print = true;
+    protected $logBuffer = '';
+    protected $logFile = 'git-deploy.log.txt';
+    protected $submodules = array();
     protected $servers = array();
+    
+    function __construct() {
+        # Check if there are any submodules in the git repository.
+        
+        $command = "git submodule status";
+
+        $output = array();
+        exec($command, $output);
+        
+        foreach ($output as $line) {
+            $line = explode(' ', $line);
+            $this->submodules[] = $line[1];
+        }
+    }
 
     function setDeployFile($deploy) {
         if (!@file_exists($deploy)) {
@@ -94,11 +125,11 @@ class Terra_Git {
         $this->filesToIgnore[] = $file;
     }
 
-    function getFilesToUpload($targetRevision = null) {
+    function getFilesToUpload($oldRevision = null, $newRevision = 'HEAD', $previousRevision = null) {
         # Get the list of files to update.
 
-        if (!empty($targetRevision)) {
-            $command = "git diff --name-status {$targetRevision}...HEAD";
+        if (!empty($oldRevision)) {
+            $command = "git diff --name-status {$oldRevision}...{$newRevision}";
         } else {
             $command = "git ls-files";
         }
@@ -109,10 +140,11 @@ class Terra_Git {
         $filesToUpload = array();
         $filesToDelete = array();
 
-        if (!empty($targetRevision)) {
+        if (!empty($oldRevision)) {
             foreach ($output as $line) {
                 if ($line[0] == 'A' or $line[0] == 'C' or $line[0] == 'M') {
-                    $filesToUpload[] = trim(substr($line, 1, strlen($line)));
+                    $path = trim(substr($line, 1, strlen($line)));
+                    $filesToUpload[] = $path;
                 } elseif ($line[0] == 'D') {
                     $filesToDelete[] = trim(substr($line, 1, strlen($line)));
                 } else {
@@ -136,16 +168,24 @@ class Terra_Git {
     }
     
     function output($message) {
-        echo $message;
+        if ($this->print) {
+            echo $message."\r\n";
+        } else {
+            $this->logBuffer .= $message."\r\n";
+        }
+    }
+    
+    function __destruct() {
+        
     }
 
-    function deploy() {
+    function deploy($revision = 'HEAD') {
         foreach ($this->servers as $server) {
-            $this->deployGitOverFtp($server['host'], $server['user'], $server['pass'], $server['port'], $server['path'], $server['passive']);
+            $this->deployGitOverFtp($server['host'], $server['user'], $server['pass'], $server['port'], $server['path'], $server['passive'], $revision);
         }
     }
 
-    function deployGitOverFtp($host, $user = '', $pass = '', $port = 21, $path = '/', $passive = true) {
+    function deployGitOverFtp($host, $user = '', $pass = '', $port = 21, $path = '/', $passive = true, $revision = 'HEAD') {
 
         # Let's make sure the $path ends with a slash.
 
@@ -176,9 +216,9 @@ class Terra_Git {
                 throw new Exception("Could not change the FTP directory to $path.");
             }
 
-            echo("----------------------------\r\n");
-            echo "Connected to {$host}{$path}\r\n";
-            echo "----------------------------\r\n";
+            $git->output(("----------------------------"));
+            $git->output( "Connected to {$host}{$path}");
+            $git->output( "----------------------------");
 
             # Now that we're logged in to the server, let's get the remote revision.
 
@@ -215,11 +255,11 @@ class Terra_Git {
                         if (!@ftp_chdir($connection, $path)) {
                             if (!@ftp_mkdir($connection, $path)) {
                                 $ret = false;
-                                echo "Failed to create '$path'.\r\n";
-                                echo "A problem occurred while attempting to create a folder. Upload to this server cannot continue.\r\n";
+                                $git->output("Failed to create '$path'.");
+                                $git->output("A problem occurred while attempting to create a folder. Upload to this server cannot continue.");
                                 return;
                             } else {
-                                echo "Created directory '$path'.\r\n";
+                                $git->output("Created directory '$path'.");
                                 $pathsThatExist[$path] = true;
                             }
                         } else {
@@ -248,12 +288,12 @@ class Terra_Git {
                         $this->output("Failed to upload {$file}. Retrying (attempt $attempts/10)... ");
                     }
                 }
-                echo "Uploaded {$file}\r\n";
+                $git->output("Uploaded {$file}");
             }
 
             foreach ($filesToDelete as $file) {
                 @ftp_delete($connection, $file);
-                echo "Deleted {$file}\r\n";
+                $git->output("Deleted {$file}");
             }
 
             if (count($filesToUpload) > 0 or count($filesToDelete) > 0) {
@@ -261,12 +301,12 @@ class Terra_Git {
                 file_put_contents($temp, exec('git rev-parse HEAD'));
                 ftp_put($connection, 'REVISION', $temp, FTP_BINARY);
                 unlink($temp);
-                echo "Uploaded REVISION file\r\n";                
+                $git->output("Uploaded REVISION file");                
             } else {
-                echo "No files to upload.";
+                $git->output("No files to upload.");
             }
             
-            echo "Finished working on {$host}{$path}\r\n";
+            $git->output("Finished working on {$host}{$path}");
 
             ftp_close($connection);
         }
