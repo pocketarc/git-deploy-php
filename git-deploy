@@ -8,9 +8,7 @@
  * @todo command to ignore arbitrary files
  * @todo command to update to specific revision (including previous, see issue #8)
  * @todo see if it ends in .ini, and if it does, don't append .ini
- */Output Function, Arbitrary Revision, Submodules and help command.
-
-Began work on a bunch of issues. Also added a -h to help out with the command, but
+ */
 
 $commands = array('-l', '-r');
 
