@@ -214,9 +214,9 @@ class Terra_Git {
                 throw new Exception("Could not change the FTP directory to $path.");
             }
 
-            $git->output(("----------------------------"));
-            $git->output( "Connected to {$host}{$path}");
-            $git->output( "----------------------------");
+            $this->output(("----------------------------"));
+            $this->output( "Connected to {$host}{$path}");
+            $this->output( "----------------------------");
 
             # Now that we're logged in to the server, let's get the remote revision.
 
@@ -253,11 +253,11 @@ class Terra_Git {
                         if (!@ftp_chdir($connection, $path)) {
                             if (!@ftp_mkdir($connection, $path)) {
                                 $ret = false;
-                                $git->output("Failed to create '$path'.");
-                                $git->output("A problem occurred while attempting to create a folder. Upload to this server cannot continue.");
+                                $this->output("Failed to create '$path'.");
+                                $this->output("A problem occurred while attempting to create a folder. Upload to this server cannot continue.");
                                 return;
                             } else {
-                                $git->output("Created directory '$path'.");
+                                $this->output("Created directory '$path'.");
                                 $pathsThatExist[$path] = true;
                             }
                         } else {
@@ -286,12 +286,12 @@ class Terra_Git {
                         $this->output("Failed to upload {$file}. Retrying (attempt $attempts/10)... ");
                     }
                 }
-                $git->output("Uploaded {$file}");
+                $this->output("Uploaded {$file}");
             }
 
             foreach ($filesToDelete as $file) {
                 @ftp_delete($connection, $file);
-                $git->output("Deleted {$file}");
+                $this->output("Deleted {$file}");
             }
 
             if (count($filesToUpload) > 0 or count($filesToDelete) > 0) {
@@ -299,12 +299,12 @@ class Terra_Git {
                 file_put_contents($temp, exec('git rev-parse HEAD'));
                 ftp_put($connection, 'REVISION', $temp, FTP_BINARY);
                 unlink($temp);
-                $git->output("Uploaded REVISION file");                
+                $this->output("Uploaded REVISION file");                
             } else {
-                $git->output("No files to upload.");
+                $this->output("No files to upload.");
             }
             
-            $git->output("Finished working on {$host}{$path}");
+            $this->output("Finished working on {$host}{$path}");
 
             ftp_close($connection);
         }
