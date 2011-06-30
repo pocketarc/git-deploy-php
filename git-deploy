@@ -240,7 +240,7 @@ class Terra_Git {
             foreach ($filesToUpload as $file) {
                 # Make sure the folder exists in the FTP server.
 
-                $dir = split("/", dirname($file));
+                $dir = explode("/", dirname($file));
                 $path = "";
                 $ret = true;
 
