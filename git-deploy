@@ -179,43 +179,43 @@ class Terra_Git {
 
     function deploy($revision = 'HEAD') {
         foreach ($this->servers as $server) {
-            $this->deployGitOverFtp($server['host'], $server['user'], $server['pass'], $server['port'], $server['path'], $server['passive'], $revision);
+            $this->deployGitOverFtp($server, $revision);
         }
     }
 
-    function deployGitOverFtp($host, $user = '', $pass = '', $port = 21, $path = '/', $passive = true, $revision = 'HEAD') {
+    function deployGitOverFtp($server, $revision = 'HEAD') {
 
         # Let's make sure the $path ends with a slash.
 
-        if (substr($path, strlen($path) - 1, strlen($path)) !== '/') {
-            $path = $path . '/';
+        if (substr($server['path'], strlen($server['path']) - 1, strlen($server['path'])) !== '/') {
+            $server['path'] = $server['path'] . '/';
         }
 
         $pathsThatExist = array();
 
         # Okay, let's connect to the server.
 
-        $connection = @ftp_connect($host, $port);
+        $connection = @ftp_connect($server['host'], $server['port']);
 
         if (!$connection) {
-            throw new Exception("Could not connect to $host.");
+            throw new Exception("Could not connect to {$server['host']}.");
         } else {
 
-            if (!@ftp_login($connection, $user, $pass)) {
-                throw new Exception("Could not login to $host (Tried to login as $user).");
+            if (!@ftp_login($connection, $server['user'], $server['pass'])) {
+                throw new Exception("Could not login to {$server['host']} (Tried to login as {$server['user']}).");
             }
 
 
-            ftp_pasv($connection, $passive);
+            ftp_pasv($connection, $server['passive']);
 
-            if (ftp_chdir($connection, $path)) {
+            if (ftp_chdir($connection, $server['path'])) {
                 
             } else {
-                throw new Exception("Could not change the FTP directory to $path.");
+                throw new Exception("Could not change the FTP directory to {$server['path']}.");
             }
 
             $this->output(("----------------------------"));
-            $this->output( "Connected to {$host}{$path}");
+            $this->output( "Connected to {$server['host']}{$server['path']}");
             $this->output( "----------------------------");
 
             # Now that we're logged in to the server, let's get the remote revision.
@@ -293,6 +293,7 @@ class Terra_Git {
                 @ftp_delete($connection, $file);
                 $this->output("Deleted {$file}");
             }
+            
 
             if (count($filesToUpload) > 0 or count($filesToDelete) > 0) {
                 $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
@@ -304,7 +305,7 @@ class Terra_Git {
                 $this->output("No files to upload.");
             }
             
-            $this->output("Finished working on {$host}{$path}");
+            $this->output("Finished working on {$server['host']}{$server['path']}");
 
             ftp_close($connection);
         }
