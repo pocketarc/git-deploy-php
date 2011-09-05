@@ -108,7 +108,8 @@ class Terra_Git {
                 'pass' => '',
                 'port' => 21,
                 'path' => '/',
-                'passive' => true
+                'passive' => true,
+                'clean_directories' => array()
                     ), $options);
 
             if ($options['skip']) {
@@ -294,7 +295,20 @@ class Terra_Git {
                 $this->output("Deleted {$file}");
             }
             
+            if (!empty($server['clean_directories'])) {
+                 foreach ($server['clean_directories'] as $dir) {
+                     if (!$tmp_files = ftp_nlist($connection, $dir)) {
+                         $this->output("{$dir} already empty");
+                         continue;
+                     }
 
+                     foreach ($tmp_files as $file) {
+                         ftp_delete($connection, $file);
+                     }
+                     $this->output("Emptied {$dir}");
+                 }
+             }
+ 
             if (count($filesToUpload) > 0 or count($filesToDelete) > 0) {
                 $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
                 file_put_contents($temp, exec('git rev-parse HEAD'));
@@ -310,5 +324,4 @@ class Terra_Git {
             ftp_close($connection);
         }
     }
-
 }
