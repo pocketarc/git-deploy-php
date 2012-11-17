@@ -52,13 +52,13 @@ Advanced Usage
 
 ### Revert a deployment
 
-If you deployed using git-deploy and you want to go back to the previous deployment, all you need is `--rollback`:
+If you deployed using git-deploy and you want to go back to the previous deployment, all you need is `--revert`:
 
-    php git-deploy [your_ini_file_name] --rollback
+    php git-deploy [your_ini_file_name] --revert
 
 If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), then you can simply use:
 
-    php git-deploy --rollback
+    php git-deploy --revert
 
 ### Deploy a specific commit
 
