@@ -1,6 +1,5 @@
 #!/usr/bin/php
 <?php
-
 /*
  * @todo log all output in file
  * @todo command to set file
@@ -10,7 +9,7 @@
  * @todo see if it ends in .ini, and if it does, don't append .ini
  */
 
-$commands = array('-l', '-r');
+$commands = array('-l', '-r', '--revert');
 
 if (isset($argv[1])) {
     if (!in_array($argv[1], $commands)) {
@@ -22,16 +21,22 @@ if (isset($argv[1])) {
     $deploy = 'deploy.ini';
 }
 
-$opts = getopt("lr:");
+$opts = getopt("lr:", array("revert"));
 
 $list = isset($opts['l']);
 $revision = isset($opts['r']) ? $opts['r'] : 'HEAD';
+
+$revert = isset($opts['revert']);
 
 try {
     $git = new Terra_Git();
     if (!$list) {
         $git->setDeployFile($deploy);
-        $git->deploy($revision);
+        if ($revert) {
+            $git->revert();
+        } else {
+            $git->deploy($revision);
+        }
     } else {
         $files = $git->getFilesToUpload();
         if (count($files['upload']) > 0) {
@@ -58,21 +63,20 @@ class Terra_Git {
         'git-deploy',
         '.gitignore',
     );
-    
     protected $print = true;
     protected $logBuffer = '';
     protected $logFile = 'git-deploy.log.txt';
     protected $submodules = array();
     protected $servers = array();
-    
+
     function __construct() {
         # Check if there are any submodules in the git repository.
-        
+
         $command = "git submodule status";
 
         $output = array();
         exec($command, $output);
-        
+
         foreach ($output as $line) {
             $line = explode(' ', $line);
             $this->submodules[] = $line[1];
@@ -124,11 +128,11 @@ class Terra_Git {
         $this->filesToIgnore[] = $file;
     }
 
-    function getFilesToUpload($oldRevision = null, $newRevision = 'HEAD', $previousRevision = null) {
+    function getFilesToUpload($oldRevision = null, $newRevision = 'HEAD') {
         # Get the list of files to update.
 
         if (!empty($oldRevision)) {
-            $command = "git diff --name-status {$oldRevision}...{$newRevision}";
+            $command = "git diff --name-status {$oldRevision} {$newRevision}";
         } else {
             $command = "git ls-files";
         }
@@ -165,17 +169,23 @@ class Terra_Git {
             'delete' => $filesToDelete
         );
     }
-    
+
     function output($message) {
         if ($this->print) {
-            echo $message."\r\n";
+            echo $message . "\r\n";
         } else {
-            $this->logBuffer .= $message."\r\n";
+            $this->logBuffer .= $message . "\r\n";
         }
     }
-    
+
     function __destruct() {
         
+    }
+
+    function revert() {
+        foreach ($this->servers as $server) {
+            $this->deployGitOverFtp($server, 'HEAD', true);
+        }
     }
 
     function deploy($revision = 'HEAD') {
@@ -184,7 +194,11 @@ class Terra_Git {
         }
     }
 
-    function deployGitOverFtp($server, $revision = 'HEAD') {
+    function deployGitOverFtp($server, $revision = 'HEAD', $revert = false) {
+
+        if ($revision == 'HEAD') {
+            $revision = exec('git rev-parse HEAD');
+        }
 
         # Let's make sure the $path ends with a slash.
 
@@ -216,8 +230,8 @@ class Terra_Git {
             }
 
             $this->output(("----------------------------"));
-            $this->output( "Connected to {$server['host']}{$server['path']}");
-            $this->output( "----------------------------");
+            $this->output("Connected to {$server['host']}{$server['path']}");
+            $this->output("----------------------------");
 
             # Now that we're logged in to the server, let's get the remote revision.
 
@@ -233,7 +247,36 @@ class Terra_Git {
                 # Couldn't get the file. I assume it's because the file didn't exist.
             }
 
-            $files = $this->getFilesToUpload($remoteRevision);
+            $tmpFile = tmpfile();
+
+            if (@ftp_fget($connection, $tmpFile, 'PREVIOUS_REVISION', FTP_ASCII)) {
+                fseek($tmpFile, 0);
+                $previousRevision = trim(fread($tmpFile, 1024));
+                fclose($tmpFile);
+            } else {
+                # Couldn't get the file. I assume it's because the file didn't exist.
+            }
+
+            if ($revert) {
+
+                if (!isset($previousRevision)) {
+                    throw new Exception("Could not find previous revision in {$server['host']}, which means that reverting is not possible.");
+                }
+
+                # Set revision to PREVIOUS_REVISION, for reverting.
+                $revision = $previousRevision;
+                if ($remoteRevision != $revision) {
+                    $this->output("Reverting from " . substr($remoteRevision, 0, 6) . " to " . substr($revision, 0, 6) . ".");
+                    $this->output("----------------------------");
+                }
+            } else {
+                if ($remoteRevision != $revision) {
+                    $this->output("Deploying update from " . substr($remoteRevision, 0, 6) . " to " . substr($revision, 0, 6) . ".");
+                    $this->output("----------------------------");
+                }
+            }
+
+            $files = $this->getFilesToUpload($remoteRevision, $revision);
             $filesToUpload = $files['upload'];
             $filesToDelete = $files['delete'];
             unset($files);
@@ -272,16 +315,16 @@ class Terra_Git {
                 $uploaded = false;
                 $attempts = 1;
                 while (!$uploaded) {
-                    
+
                     if ($attempts == 10) {
                         $this->output("Tried to upload $file 10 times, and failed 10 times. Something is wrong, so I'm going to stop executing now.");
                         exit;
                     }
-                    
+
                     # This makes sure to repeat the upload until it finally succeeds.
                     # Hopefully helps fix a problem where some files aren't transferred.
                     $uploaded = @ftp_put($connection, $file, $file, FTP_BINARY);
-                    
+
                     if (!$uploaded) {
                         $attempts = $attempts + 1;
                         $this->output("Failed to upload {$file}. Retrying (attempt $attempts/10)... ");
@@ -294,34 +337,50 @@ class Terra_Git {
                 @ftp_delete($connection, $file);
                 $this->output("Deleted {$file}");
             }
-            
-            if (!empty($server['clean_directories'])) {
-                 foreach ($server['clean_directories'] as $dir) {
-                     if (!$tmp_files = ftp_nlist($connection, $dir)) {
-                         $this->output("{$dir} already empty");
-                         continue;
-                     }
 
-                     foreach ($tmp_files as $file) {
-                         ftp_delete($connection, $file);
-                     }
-                     $this->output("Emptied {$dir}");
-                 }
-             }
- 
+            if (!empty($server['clean_directories'])) {
+                foreach ($server['clean_directories'] as $dir) {
+                    if (!$tmp_files = ftp_nlist($connection, $dir)) {
+                        $this->output("{$dir} already empty");
+                        continue;
+                    }
+
+                    foreach ($tmp_files as $file) {
+                        ftp_delete($connection, $file);
+                    }
+                    $this->output("Emptied {$dir}");
+                }
+            }
+
             if (count($filesToUpload) > 0 or count($filesToDelete) > 0) {
+                $this->output("----------------------------");
                 $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
-                file_put_contents($temp, exec('git rev-parse HEAD'));
+                file_put_contents($temp, $revision);
                 ftp_put($connection, 'REVISION', $temp, FTP_BINARY);
                 unlink($temp);
-                $this->output("Uploaded REVISION file");                
+                $this->output("Uploaded REVISION file.");
+
+                # Upload file containing the current revision, for reverting when necessary.
+                # But, only if the revision we're deploying is different from the one currently deployed.
+                if ($remoteRevision != $revision) {
+                    $temp = tempnam(sys_get_temp_dir(), 'gitRevision');
+                    file_put_contents($temp, $remoteRevision);
+                    ftp_put($connection, 'PREVIOUS_REVISION', $temp, FTP_BINARY);
+                    unlink($temp);
+                    $this->output("Uploaded PREVIOUS_REVISION file.");
+                }
             } else {
                 $this->output("No files to upload.");
             }
             
+            $this->output( "----------------------------");
+
             $this->output("Finished working on {$server['host']}{$server['path']}");
+            
+            $this->output( "----------------------------");
 
             ftp_close($connection);
         }
     }
+
 }
