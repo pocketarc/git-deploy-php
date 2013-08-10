@@ -312,25 +312,15 @@ class Terra_Git {
                     }
                 }
 
-                $uploaded = false;
-                $attempts = 1;
-                while (!$uploaded) {
+                ftp_delete($connection, $file);
+                $uploaded = ftp_put($connection, $file, $file, FTP_BINARY);
 
-                    if ($attempts == 10) {
-                        $this->output("Tried to upload $file 10 times, and failed 10 times. Something is wrong, so I'm going to stop executing now.");
-                        exit;
-                    }
-
-                    # This makes sure to repeat the upload until it finally succeeds.
-                    # Hopefully helps fix a problem where some files aren't transferred.
-                    $uploaded = @ftp_put($connection, $file, $file, FTP_BINARY);
-
-                    if (!$uploaded) {
-                        $attempts = $attempts + 1;
-                        $this->output("Failed to upload {$file}. Retrying (attempt $attempts/10)... ");
-                    }
+                if (!$uploaded) {
+                    $this->output("Failed to upload {$file}. Deployment will stop to allow you to check what went wrong.");
+                    exit;
+                } else {
+                    $this->output("Uploaded {$file}");
                 }
-                $this->output("Uploaded {$file}");
             }
 
             foreach ($filesToDelete as $file) {
