@@ -24,7 +24,7 @@ In the root directory of your project, create a `deploy.ini` file.
     
     skip = false
     user = example
-    pass = password
+    pass = password    
     host = example.com
     port = 21
     path = /path/to/installation
@@ -42,6 +42,10 @@ To get the hash of the current commit, you can use:
 
 Advanced Usage
 --------------
+
+### Using SFTP
+
+To use SFTP, you have two options. With the long-form deploy.ini configuration, you just need to add `scheme = sftp`. With the short-form, you just need to change `ftp://` to `sftp://`.
 
 ### Revert a deployment
 
