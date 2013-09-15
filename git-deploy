@@ -34,6 +34,39 @@ function error($message) {
     die;
 }
 
+function get_recursive_file_list($folder, $prefix = '') {
+
+    # Add trailing slash
+    $folder = (substr($folder, strlen($folder) - 1, 1) == '/') ? $folder : $folder . '/';
+
+    $return = array();
+
+    foreach (clean_scandir($folder) as $file) {
+        if (is_dir($folder . $file)) {
+            $return = array_merge($return, get_recursive_file_list($folder . $file, $prefix . $file . '/'));
+        } else {
+            $return[] = $prefix . $file;
+        }
+    }
+
+    return $return;
+}
+
+function clean_scandir($folder, $ignore = array()) {
+    $ignore[] = '.';
+    $ignore[] = '..';
+    $ignore[] = '.DS_Store';
+    $return = array();
+
+    foreach (scandir($folder) as $file) {
+        if (!in_array($file, $ignore)) {
+            $return[] = $file;
+        }
+    }
+
+    return $return;
+}
+
 class Git {
 
     public static $git_executable_path = "git";
@@ -174,7 +207,13 @@ abstract class Server {
 
         foreach ($this->upload_untracked as $file) {
             if (file_exists($git->repo_path . $file)) {
-                $changes['upload'][$file] = file_get_contents($git->repo_path . $file);
+            	if (is_dir($git->repo_path . $file)) {
+            		foreach (get_recursive_file_list($git->repo_path . $file, $file."/") as $buffer) {
+            			$changes['upload'][$buffer] = file_get_contents($git->repo_path . $buffer);
+            		}
+            	} else {
+            		$changes['upload'][$file] = file_get_contents($git->repo_path . $file);
+            	}
             }
         }
         
