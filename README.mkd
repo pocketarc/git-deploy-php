@@ -1,29 +1,22 @@
-git-deploy-php
-==============
+git-deploy-php 2.0
+==================
 
-Description
------------
-
-git-deploy-php allows quick and easy deployments of Git repositories to FTP servers.
-
-It was created to simplify the process of deploying projects to shared hosting environments where shell access is not available, and to save bandwidth, by only uploading the files that have changed.
+git-deploy-php allows quick and easy deployments of Git repositories to FTP or SFTP servers. You DO NOT need to have git installed on the server. Great for shared servers where you have no shell access, and to save bandwidth and time by only uploading the files that have changed.
 
 Usage
 -----
 
-Using git-deploy-php could not be easier.
-
 1. Drop `git-deploy` into your project.
 2. Create the `deploy.ini` file (see below).
-3. Execute `php git-deploy`.
+3. Run `php git-deploy` in your command line / terminal.
 
 And there you go. It's that simple.
 
 ### deploy.ini
 
-In the root directory of your source code, create a `deploy.ini` file.
+In the root directory of your project, create a `deploy.ini` file.
 
-*Note: `deploy.ini` is the default file's name. You can name it `staging.ini`, for example, and execute `php git-deploy staging`. That serves as an easy way to separate the deployment to staging and production servers.*
+*Note: `deploy.ini` is the default file's name. You can name it anything you want (for example, `staging.ini`), and run `php git-deploy staging`. That serves as an easy way to separate the deployment to staging and production servers.*
 
     ; This is a sample deploy.ini file.
     
@@ -41,9 +34,9 @@ In the root directory of your source code, create a `deploy.ini` file.
     [ftp://example:password@example.com:21/path/to/installation]
 
 The first time it's executed, git-deploy will assume that your deployment server is empty, and will upload all the files in the git repository.
-If you've already deployed your project's files previously, you have to create a REVISION file on your deployment server, containing the hash of the revision it's currently in.
+If you've already deployed your project's files previously, you have to create a REVISION file on your deployment server, containing the hash of the commit it's currently in.
 
-To get the hash of the current revision, you can use:
+To get the hash of the current commit, you can use:
 
     git rev-parse HEAD
 
@@ -54,7 +47,7 @@ Advanced Usage
 
 If you deployed using git-deploy and you want to go back to the previous deployment, all you need is `--revert`:
 
-    php git-deploy [your_ini_file_name] --revert
+    php git-deploy --revert [your_ini_file_name]
 
 If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), then you can simply use:
 
@@ -62,19 +55,19 @@ If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), th
 
 ### Deploy a specific commit
 
-    php git-deploy [your_ini_file_name] -r [your_commit_hash]
+    php git-deploy -r [your_commit_hash] [your_ini_file_name]
 
 If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), then you can simply use:
 
     php git-deploy -r [your_commit_hash]
 
-Note: If you want to, instead of using a commit hash, you can use a tag, or any other identifier that git-diff can understand.
+Note: If you want to, instead of using a commit hash, you can use a tag, or any other valid reference.
 
 ### List files to upload and delete
 
 Sometimes, you may just want to see what files are to be uploaded to the FTP server, and which ones are to be deleted. In this case, you can use `-l` (lowercase L):
 
-    php git-deploy [your_ini_file_name] -l
+    php git-deploy -l [your_ini_file_name]
 
 If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), then you can simply use:
 
@@ -82,14 +75,24 @@ If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), th
 
 Pretty simple, huh?
 
+### Clean remote directories automatically
+
+If you have directories you use for caching that you'd like to clear when you deploy a new commit, you can add the following to your .ini file:
+
+	clean_directories[] = folder/to/clean
+	clean_directories[] = another/folder
+
+And git-deploy will empty those directories for you.
+
+### 
+
 How It Works
 ------------
-git-deploy stores file called REVISION on your server inside the root path to your application. This file stores the current revision of your application residing on your server.
+git-deploy stores a file called REVISION on your server. This file contains the hash of the commit that you've deployed to that server. When you run git-deploy, it downloads that file and compares the commit reference in it with the commit you're trying to deploy to find out which files to upload.
 
-When you run a git deploy, git-deploy downloads the REVISION file, and checks to see what files are different between revisions and either upload the changed files or deletes them from the server.
+git-deploy also stores a REVISION file for each submodule in your repository, as well as a PREVIOUS_REVISION file for both your repository and each submodule. This allows it to keep your submodules up-to-date, as well as to know which commit to go back to you when you run `php git-deploy --revert`.
 
 Suggestions, questions and complaints.
 ----------
 
-If you've got any suggestions, questions, or anything you don't like about git-deploy-php, [create an issue](https://github.com/BrunoDeBarros/git-deploy-php/issues). I'd really appreciate your feedback.
-Feel free to fork this project, if you want to contribute to it. 
+If you've got any suggestions, questions, or anything you don't like about git-deploy, [you should create an issue here](https://github.com/BrunoDeBarros/git-deploy-php/issues). Feel free to fork this project, if you want to contribute to it. 
