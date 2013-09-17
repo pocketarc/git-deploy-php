@@ -123,7 +123,7 @@ class Git {
             foreach ($result as $line) {
                 if ($line[0] == 'A' or $line[0] == 'C' or $line[0] == 'M') {
                     $path = trim(substr($line, 1, strlen($line)));
-                    $return['upload'][$path] = $this->exec("show $target_commit:$path");
+                    $return['upload'][$path] = $this->exec("show $target_commit:\"$path\"");
                 } elseif ($line[0] == 'D') {
                     $return['delete'][] = trim(substr($line, 1, strlen($line)));
                 } else {
