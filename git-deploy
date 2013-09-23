@@ -73,7 +73,7 @@ class Git {
     public $repo_path;
 
     public function __construct($repo_path) {
-        $this->repo_path = $repo_path;
+        $this->repo_path = rtrim($repo_path, '/').'/';
 
         # Test if has Git in cmd.
         if (stristr($this->exec("--version"), "git version") === false) {
