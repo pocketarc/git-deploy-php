@@ -468,8 +468,13 @@ class FTP extends Server {
         }
     }
 
-    protected function recursive_remove($file_or_directory) {
+    protected function recursive_remove($file_or_directory, $die_if_fail = false) {
         if (!(@ftp_rmdir($this->connection, $file_or_directory) || @ftp_delete($this->connection, $file_or_directory))) {
+            
+            if ($die_if_fail) {
+                return false;
+            }
+            
             $filelist = ftp_nlist($this->connection, $file_or_directory);
 
             foreach ($filelist as $file) {
@@ -478,7 +483,7 @@ class FTP extends Server {
                 }
             }
 
-            $this->recursive_remove($file_or_directory);
+            $this->recursive_remove($file_or_directory, true);
         }
     }
 
