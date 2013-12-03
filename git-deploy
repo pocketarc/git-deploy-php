@@ -381,7 +381,7 @@ class SFTP extends Server {
 class FTP extends Server {
 
     public function connect($server) {
-        $this->connection = @ftp_connect($server['host'], $server['port'], 10);
+        $this->connection = @ftp_connect($server['host'], $server['port'], 30);
 
         if (!$this->connection) {
             error("Could not connect to {$this->host}");
@@ -586,6 +586,22 @@ class Config {
 
 #### PHP SEC LIB 0.3.5
 
+/**
+ * Returns the message numbers
+ */
+define('NET_SSH2_LOG_SIMPLE',  1);
+/**
+ * Returns the message content
+ */
+define('NET_SSH2_LOG_COMPLEX', 2);
+/**
+ * Outputs the content real-time
+ */
+define('NET_SSH2_LOG_REALTIME', 3);
+/**
+ * Dumps the content real-time to a file
+ */
+define('NET_SSH2_LOG_REALTIME_FILE', 4);
 
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 
@@ -27345,14 +27361,6 @@ define('NET_SSH1_LOG_SIMPLE',  1);
  * Returns the message content
  */
 define('NET_SSH1_LOG_COMPLEX', 2);
-/**
- * Outputs the content real-time
- */
-define('NET_SSH2_LOG_REALTIME', 3);
-/**
- * Dumps the content real-time to a file
- */
-define('NET_SSH2_LOG_REALTIME_FILE', 4);
 /**#@-*/
 
 /**#@+
@@ -28801,22 +28809,7 @@ define('NET_SSH2_CHANNEL_SHELL',1);
  * @access public
  * @see Net_SSH2::getLog()
  */
-/**
- * Returns the message numbers
- */
-define('NET_SSH2_LOG_SIMPLE',  1);
-/**
- * Returns the message content
- */
-define('NET_SSH2_LOG_COMPLEX', 2);
-/**
- * Outputs the content real-time
- */
-define('NET_SSH2_LOG_REALTIME', 3);
-/**
- * Dumps the content real-time to a file
- */
-define('NET_SSH2_LOG_REALTIME_FILE', 4);
+
 /**#@-*/
 
 /**#@+
