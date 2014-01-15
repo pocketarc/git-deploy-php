@@ -507,7 +507,7 @@ class Config {
         $deploy = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'deploy.ini';
         $commands = array('-l', '-r', '-c', '-d', '--revert', '--log', '--repo');
 
-        $deploy_file = end($argv);
+        $deploy_file = isset($argv[1]) ? end($argv) : "deploy.ini";
 
         if (!in_array($deploy_file, $commands)) {
             $deploy = $deploy_file . (substr($deploy_file, -4) === '.ini' ? '' : '.ini');
