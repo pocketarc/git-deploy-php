@@ -47,6 +47,10 @@ Advanced Usage
 
 To use SFTP, you have two options. With the long-form deploy.ini configuration, you just need to add `scheme = sftp`. With the short-form, you just need to change `ftp://` to `sftp://`.
 
+If you want to use a private key to login instead of a password, you can do so by adding the following to your deploy.ini configuration:
+
+    sftp_key = /path/to/key/file
+
 ### Revert a deployment
 
 If you deployed using git-deploy and you want to go back to the previous deployment, all you need is `--revert`:
@@ -105,6 +109,18 @@ If you have files that you're not tracking in your repository but that you'd sti
 	upload_untracked[] = another/file/toignore.php
 
 And git-deploy will automatically upload those files for you. This is super useful for things like Composer, which recommends that you don't track the vendor folder in your git repo. This way, you can have git-deploy upload the entire vendor folder to the server, and you won't need Composer installed on it.
+
+### Enable maintenance mode on your website for the duration of the deployment
+
+If you want to take your website down with an "under maintenance" page to prevent users from seeing errors during the middle of a deployment, you can ask git-deploy to automatically turn maintenance mode on prior to deploying, and off at the end of the deployment.
+
+It works by modifying a file specified by the `maintenance_file` option in your `deploy.ini`. It'll set that file's contents to `maintenance_on_value` at the start of the deployment and then set its contents to `maintenance_off_value` at the end of the deployment. For example:
+
+    maintenance_file = 'maintenance.php'
+    maintenance_on_value = '<?php $under_maintenance = true;?>'
+    maintenance_off_value = '<?php $under_maintenance = false;?>'
+
+Note: It's up to your application to detect whether or not maintenance mode is on by checking the `maintenance_file`, and proceed accordingly.
 
 How It Works
 ------------

@@ -254,6 +254,11 @@ abstract class Server {
 
         logmessage("Will upload $count_upload file" . ($count_upload == 1 ? '' : 's') . ".");
         logmessage("Will delete $count_delete file" . ($count_delete == 1 ? '' : 's') . ".");
+        
+        if (isset($this->server['maintenance_file'])) {
+            $this->set_file($this->server['maintenance_file'], $this->server['maintenance_on_value']);
+            logmessage("Turned maintenance mode on.");
+        }
 
         foreach ($changes['upload'] as $file => $contents) {
             if ($list_only) {
@@ -298,6 +303,12 @@ abstract class Server {
             $this->set_file('REVISION', $target_commit);
             $this->set_file('PREVIOUS_REVISION', (empty($this->current_commit) ? $target_commit : $this->current_commit));
         }
+        
+        if (isset($this->server['maintenance_file'])) {
+            $this->set_file($this->server['maintenance_file'], $this->server['maintenance_off_value']);
+            logmessage("Turned maintenance mode off.");
+        }
+        
         logmessage("Finished working on: {$this->host}");
     }
 
@@ -307,7 +318,17 @@ class SFTP extends Server {
 
     public function connect($server) {
         $this->connection = new Net_SFTP($server['host'], $server['port'], 10);
-        if (!$this->connection->login($server['user'], $server['pass'])) {
+        $logged_in = false;
+        
+        if (isset($server['sftp_key'])) {
+            $key = new Crypt_RSA();
+            $key->loadKey(file_get_contents($server['sftp_key']));
+            $logged_in = $this->connection->login($server['user'], $key);
+        } else {
+            $logged_in = $this->connection->login($server['user'], $server['pass']);
+        }
+        
+        if (!$logged_in) {
             error("Could not login to {$this->host}");
         }
 
