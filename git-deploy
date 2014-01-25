@@ -9,7 +9,7 @@ function main() {
         if ($args['revert']) {
             $server->revert($git, $args['list_only']);
         } else {
-            $server->deploy($git, $git->interpret_target_commit($args['target_commit']), $args['list_only']);
+            $server->deploy($git, $git->interpret_target_commit($args['target_commit'], $server->server['branch']), $args['list_only']);
         }
     }
 }
@@ -81,7 +81,14 @@ class Git {
         }
     }
 
-    public function interpret_target_commit($target_commit) {
+    public function interpret_target_commit($target_commit, $branch = null) {
+        if ($branch !== null) {
+            if ($target_commit == "HEAD") {
+                # Get the HEAD commit of the branch specified in the deploy.ini
+                $target_commit = $branch;
+            }
+        }
+        
         return $this->exec("rev-parse $target_commit");
     }
 
@@ -581,6 +588,7 @@ class Config {
                     'scheme' => 'ftp',
                     'host' => '',
                     'user' => '',
+                    'branch' => null,
                     'pass' => '',
                     'port' => 21,
                     'path' => '/',

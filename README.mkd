@@ -71,6 +71,14 @@ If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), th
 
 Note: If you want to, instead of using a commit hash, you can use a tag, or any other valid reference.
 
+### Deploy the latest commit from different branches
+
+Sometimes you might need to deploy code from different branches to different servers (e.g. from the develop branch to the staging server, and from the master branch to the production server). This is easy to do. Add the following to your deploy.ini configuration:
+
+    branch = develop
+
+git-deploy will then always deploy the latest commit from the develop branch to the server.
+
 ### List files to upload and delete
 
 Sometimes, you may just want to see what files are to be uploaded to the FTP server, and which ones are to be deleted. In this case, you can use `-l` (lowercase L):
