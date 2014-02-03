@@ -130,7 +130,7 @@ class Git {
             foreach ($result as $line) {
                 if ($line[0] == 'A' or $line[0] == 'C' or $line[0] == 'M') {
                     $path = trim(substr($line, 1, strlen($line)));
-                    $return['upload'][$path] = $this->exec("show $target_commit:\"$path\"");
+                    $return['upload'][$path] = $this->get_file_contents("$target_commit:\"$path\"");
                 } elseif ($line[0] == 'D') {
                     $return['delete'][] = trim(substr($line, 1, strlen($line)));
                 } else {
@@ -140,17 +140,23 @@ class Git {
         } else {
             foreach ($result as $file) {
                 if (!in_array($file, $submodule_paths)) {
-                    $return['upload'][$file] = $this->exec("show $target_commit:$file");
+                    $return['upload'][$file] = $this->get_file_contents("$target_commit:$file");
                 }
             }
         }
-
+        
         return $return;
     }
+    
+    protected function get_file_contents($path) {
+    	$temp = tempnam(sys_get_temp_dir(), "git-deploy-");
+    	$this->exec("show $path", "> '$temp'");
+    	return file_get_contents($temp);
+    }
 
-    protected function exec($command) {
+    protected function exec($command, $suffix = "") {
         if (chdir($this->repo_path)) {
-            $console = trim(shell_exec(self::$git_executable_path . " " . $command . " 2>&1"));
+            $console = trim(shell_exec(self::$git_executable_path . " " . $command . " 2>&1 " . $suffix));
             return $console;
         } else {
             error("Unable to access the git repository's folder.");
