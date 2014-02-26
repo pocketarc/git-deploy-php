@@ -1,5 +1,7 @@
 <?php
 
+ini_set('memory_limit', '256M');
+
 function main() {
     $args = Config::getArgs();
     $servers = Config::getServers($args['config_file']);
