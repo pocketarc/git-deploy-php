@@ -417,6 +417,11 @@ class SFTP extends Server {
 class FTP extends Server {
 
     public function connect($server) {
+        
+        if (!extension_loaded('ftp')) {
+            error("You need the FTP extension to be enabled if you want to deploy via FTP.");
+        }
+
         $this->connection = @ftp_connect($server['host'], $server['port'], 30);
 
         if (!$this->connection) {
