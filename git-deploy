@@ -119,6 +119,7 @@ class Git {
             'submodules' => $submodule_paths
         );
 
+        $command = str_replace(array("\n","\r\n"), '', $command);
         $result = $this->exec($command);
 
         if (empty($result)) {
