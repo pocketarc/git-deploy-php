@@ -11,7 +11,7 @@ function main() {
         if ($args['revert']) {
             $server->revert($git, $args['list_only']);
         } else {
-            $server->deploy($git, $git->interpret_target_commit($args['target_commit'], $server->server['branch']), $args['list_only']);
+            $server->deploy($git, $git->interpret_target_commit($args['target_commit'], $server->server['branch']), false, $args['list_only']);
         }
     }
 }
