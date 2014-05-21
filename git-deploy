@@ -11,7 +11,7 @@ function main() {
         if ($args['revert']) {
             $server->revert($git, $args['list_only']);
         } else {
-            $server->deploy($git, $git->interpret_target_commit($args['target_commit'], $server->server['branch']), $args['list_only']);
+            $server->deploy($git, $git->interpret_target_commit($args['target_commit'], $server->server['branch']), false, $args['list_only']);
         }
     }
 }
@@ -119,6 +119,7 @@ class Git {
             'submodules' => $submodule_paths
         );
 
+        $command = str_replace(array("\n","\r\n"), '', $command);
         $result = $this->exec($command);
 
         if (empty($result)) {
