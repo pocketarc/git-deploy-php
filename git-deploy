@@ -403,13 +403,27 @@ class SFTP extends Server {
         }
     }
 
+    protected function recursive_remove($file_or_directory, $if_dir = false) {
+        $parent = dirname($file_or_directory);
+        if ($this->connection->delete($file_or_directory, $if_dir)) {
+            $filelist = $this->connection->nlist($parent);
+            foreach ($filelist as $file) {
+                if ($file != '.' and $file != '..') {
+                    return false;
+                }
+            }
+
+            $this->recursive_remove($parent, true);
+        }
+    }
+
     public function mkdir($file) {
         $this->connection->mkdir($file);
         logmessage("Created directory: $file");
     }
 
     public function unset_file($file) {
-        $this->connection->delete($file, true);
+        $this->recursive_remove($file, false);
         logmessage("Deleted: $file");
     }
 
