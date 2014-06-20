@@ -625,7 +625,9 @@ class Config {
                     'upload_untracked' => array()
                         ), $options);
 
-                $options['pass'] = self::promptPassword();
+                if (!isset($options['pass'])) {
+                    $options['pass'] = self::promptPassword();
+                }
 
                 if ($options['skip']) {
                     continue;
