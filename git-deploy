@@ -617,7 +617,6 @@ class Config {
                     'host' => '',
                     'user' => '',
                     'branch' => null,
-                    'pass' => '',
                     'port' => 21,
                     'path' => '/',
                     'passive' => true,
@@ -625,6 +624,8 @@ class Config {
                     'ignore_files' => array(),
                     'upload_untracked' => array()
                         ), $options);
+
+                $options['pass'] = self::promptPassword();
 
                 if ($options['skip']) {
                     continue;
@@ -637,6 +638,24 @@ class Config {
         }
 
         return $return;
+    }
+
+    public static function promptPassword() {
+        $prompt = 'Enter ftp password: ';
+
+        $command = "/usr/bin/env bash -c 'echo OK'";
+        if (rtrim(shell_exec($command)) !== 'OK') {
+            trigger_error("Can't invoke bash");
+            return;
+        }
+
+        $command = "/usr/bin/env bash -c 'read -s -p \""
+                . addslashes($prompt)
+                . "\" mypassword && echo \$mypassword'";
+        $password = rtrim(shell_exec($command));
+        echo "\n";
+
+        return $password;
     }
 
 }
