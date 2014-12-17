@@ -280,7 +280,9 @@ abstract class Server {
             if ($list_only) {
                 logmessage("Uploaded: $file");
             } else {
-                $this->set_file($file, $contents);
+                if (!in_array($file, $changes['submodules'])) {
+                    $this->set_file($file, $contents);
+                }
             }
         }
 
@@ -298,8 +300,8 @@ abstract class Server {
         }
 
         foreach ($changes['submodules'] as $submodule) {
-            $this->set_file('REVISION', $submodule_meta[$submodule]['target_subcommit']);
-            $this->set_file('PREVIOUS_REVISION', (empty($submodule_meta[$submodule]['current_subcommit']) ? $submodule_meta[$submodule]['target_subcommit'] : $submodule_meta[$submodule]['current_subcommit']));
+            $this->set_file($submodule . '/REVISION', $submodule_meta[$submodule]['target_subcommit']);
+            $this->set_file($submodule . '/PREVIOUS_REVISION', (empty($submodule_meta[$submodule]['current_subcommit']) ? $submodule_meta[$submodule]['target_subcommit'] : $submodule_meta[$submodule]['current_subcommit']));
         }
 
         $this->set_current_commit($target_commit, $list_only);
