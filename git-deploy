@@ -280,7 +280,7 @@ abstract class Server {
             if ($list_only) {
                 logmessage("Uploaded: $file");
             } else {
-                if ($file != $submodule) {
+                if (!in_array($file, $changes['submodules'])) {
                     $this->set_file($file, $contents);
                 }
             }
