@@ -176,6 +176,7 @@ abstract class Server {
     public $existing_paths_cache;
     public $clean_directories;
     public $ignore_files;
+    public $ignore_directories;
     public $upload_untracked;
     public $server;
 
@@ -185,6 +186,7 @@ abstract class Server {
         $this->ignore_files = array_merge(array(
             '.gitignore', '.gitattributes', '.gitmodules', 'deploy.ini', 'git-deploy', $deploy_script
                 ), $server['ignore_files']);
+        $this->ignore_directories= $server['ignore_directories'];
         $this->upload_untracked = $server['upload_untracked'];
         $this->host = "{$server['scheme']}://{$server['user']}@{$server['host']}:{$server['port']}{$server['path']}";
         $this->connect($server);
@@ -218,6 +220,12 @@ abstract class Server {
         foreach ($changes['upload'] as $file => $contents) {
             if (in_array($file, $this->ignore_files)) {
                 unset($changes['upload'][$file]);
+            }
+            foreach($this->ignore_directories as $ignoreDir) {
+                if (strpos($file, $ignoreDir) !== false) {
+                    unset($changes['upload'][$file]);
+                    break;
+                }
             }
         }
 
@@ -624,6 +632,7 @@ class Config {
                     'passive' => true,
                     'clean_directories' => array(),
                     'ignore_files' => array(),
+                    'ignore_directories' => array(),
                     'upload_untracked' => array()
                         ), $options);
 
