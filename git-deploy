@@ -348,14 +348,21 @@ class SFTP extends Server {
         
         if (isset($server['sftp_key'])) {
             $key = new Crypt_RSA();
+	    if (isset($server['pass']) and !empty($server['pass'])) {
+		$key->setPassword($server['pass']);
+	    }
             $key->loadKey(file_get_contents($server['sftp_key']));
             $logged_in = $this->connection->login($server['user'], $key);
+
+	    if (!$logged_in) {
+            	error("Could not login to {$this->host}. It may be because the key requires a passphrase, which you need to specify it as the 'pass' attribute.");
+            }
         } else {
             $logged_in = $this->connection->login($server['user'], $server['pass']);
-        }
-        
-        if (!$logged_in) {
-            error("Could not login to {$this->host}");
+
+	    if (!$logged_in) {
+            	error("Could not login to {$this->host}");
+            }
         }
 
         if (!$this->connection->chdir($server['path'])) {
@@ -639,6 +646,12 @@ class Config {
                 if (!isset($options['pass']) and !isset($options['sftp_key'])) {
                     $options['pass'] = self::promptPassword();
                 }
+
+		if (isset($options['sftp_key'])) {
+			if (substr($options['sftp_key'], 0, 2) == "~/") {
+				$options['sftp_key'] = $_SERVER['HOME'].substr($options['sftp_key'], 1);
+			}
+		}
 
                 if ($options['skip']) {
                     continue;
