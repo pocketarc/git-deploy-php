@@ -1,36 +1,52 @@
 <?php
 
 namespace Brunodebarros\Gitdeploy;
+
 use Brunodebarros\Gitdeploy\Helpers;
 
 class Ftp extends Server {
 
-    public function connect($server) {
-
+    public function connect($test = false) {
         if (!extension_loaded('ftp')) {
             Helpers::error("You need the FTP extension to be enabled if you want to deploy via FTP.");
         }
 
-        $this->connection = @ftp_connect($server['host'], $server['port'], 30);
+        if (!$this->connection or $test) {
+            $server = $this->server;
+            $this->connection = @ftp_connect($server['host'], $server['port'], 30);
 
-        if (!$this->connection) {
-            Helpers::error("Could not connect to {$this->host}");
-        } else {
-            if (!@ftp_login($this->connection, $server['user'], $server['pass'])) {
-                Helpers::error("Could not login to {$this->host}");
+            if (!$this->connection) {
+                Helpers::error("Could not connect to {$this->host}");
+            } else {
+                if (!@ftp_login($this->connection, $server['user'], $server['pass'])) {
+                    Helpers::error("Could not login to {$this->host}");
+                }
+
+                ftp_pasv($this->connection, $server['passive']);
+
+                if (!ftp_chdir($this->connection, $server['path'])) {
+                    Helpers::error("Could not change the directory to {$server['path']} on {$this->host}");
+                }
             }
 
-            ftp_pasv($this->connection, $server['passive']);
-
-            if (!ftp_chdir($this->connection, $server['path'])) {
-                Helpers::error("Could not change the directory to {$server['path']} on {$this->host}");
-            }
+            Helpers::logmessage("Connected to: {$this->host}");
+            $this->current_commit = $this->get_file('REVISION', true);
         }
 
-        Helpers::logmessage("Connected to: {$this->host}");
+        if ($test) {
+            $this->disconnect();
+        }
+    }
+
+    public function disconnect() {
+        ftp_close($this->connection);
+        $this->connection = null;
+        Helpers::logmessage("Disconnected from: {$this->host}");
     }
 
     public function get_file($file, $ignore_if_error = false) {
+        $this->connect();
+
         $tmpFile = tempnam(sys_get_temp_dir(), 'GITDEPLOYPHP');
 
         if ($ignore_if_error) {
@@ -53,6 +69,8 @@ class Ftp extends Server {
     }
 
     public function set_file($file, $contents, $die_if_fail = false) {
+        $this->connect();
+
         # Make sure the folder exists in the FTP server.
 
         $dir = explode("/", dirname($file));
@@ -99,6 +117,8 @@ class Ftp extends Server {
     }
 
     protected function recursive_remove($file_or_directory, $die_if_fail = false) {
+        $this->connect();
+
         if (!(@ftp_rmdir($this->connection, $file_or_directory) || @ftp_delete($this->connection, $file_or_directory))) {
 
             if ($die_if_fail) {
@@ -118,11 +138,15 @@ class Ftp extends Server {
     }
 
     public function mkdir($file) {
+        $this->connect();
+
         ftp_mkdir($this->connection, $file);
         Helpers::logmessage("Created directory: $file");
     }
 
     public function unset_file($file) {
+        $this->connect();
+
         $this->recursive_remove($file);
         Helpers::logmessage("Deleted: $file");
     }

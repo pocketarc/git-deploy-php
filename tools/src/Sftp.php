@@ -1,44 +1,61 @@
 <?php
 
 namespace Brunodebarros\Gitdeploy;
+
 use Brunodebarros\Gitdeploy\Helpers;
 
 class Sftp extends Server {
 
-    public function connect($server) {
-        include('Crypt/RSA.php');
-        include('Net/SFTP.php');
-        
-        $this->connection = new \Net_SFTP($server['host'], $server['port'], 10);
-        $logged_in = false;
+    public function connect($test = false) {
+        if (!$this->connection or $test) {
+            $server = $this->server;
+            require_once('Crypt/RSA.php');
+            require_once('Net/SFTP.php');
 
-        if (isset($server['sftp_key'])) {
-            $key = new \Crypt_RSA();
-            if (isset($server['pass']) and ! empty($server['pass'])) {
-                $key->setPassword($server['pass']);
-            }
-            $key->loadKey(file_get_contents($server['sftp_key']));
-            $logged_in = $this->connection->login($server['user'], $key);
+            $this->connection = new \Net_SFTP($server['host'], $server['port'], 10);
+            $logged_in = false;
 
-            if (!$logged_in) {
-                Helpers::error("Could not login to {$this->host}. It may be because the key requires a passphrase, which you need to specify it as the 'pass' attribute.");
-            }
-        } else {
-            $logged_in = $this->connection->login($server['user'], $server['pass']);
+            if (isset($server['sftp_key'])) {
+                $key = new \Crypt_RSA();
+                if (isset($server['pass']) and ! empty($server['pass'])) {
+                    $key->setPassword($server['pass']);
+                }
+                $key->loadKey(file_get_contents($server['sftp_key']));
+                $logged_in = $this->connection->login($server['user'], $key);
 
-            if (!$logged_in) {
-                Helpers::error("Could not login to {$this->host}");
+                if (!$logged_in) {
+                    Helpers::error("Could not login to {$this->host}. It may be because the key requires a passphrase, which you need to specify it as the 'pass' attribute.");
+                }
+            } else {
+                $logged_in = $this->connection->login($server['user'], $server['pass']);
+
+                if (!$logged_in) {
+                    Helpers::error("Could not login to {$this->host}");
+                }
             }
+
+            if (!$this->connection->chdir($server['path'])) {
+                Helpers::error("Could not change the directory to {$server['path']} on {$this->host}");
+            }
+
+            Helpers::logmessage("Connected to: {$this->host}");
+            $this->current_commit = $this->get_file('REVISION', true);
         }
 
-        if (!$this->connection->chdir($server['path'])) {
-            Helpers::error("Could not change the directory to {$server['path']} on {$this->host}");
+        if ($test) {
+            $this->disconnect();
         }
+    }
 
-        Helpers::logmessage("Connected to: {$this->host}");
+    public function disconnect() {
+        $this->connection->disconnect();
+        $this->connection = null;
+        Helpers::logmessage("Disconnected from: {$this->host}");
     }
 
     public function get_file($file, $ignore_if_error = false) {
+        $this->connect();
+
         $contents = $this->connection->get($file);
         if ($contents) {
             return $contents;
@@ -53,6 +70,8 @@ class Sftp extends Server {
     }
 
     public function set_file($file, $contents) {
+        $this->connect();
+
         $file = $file;
         $dir = explode("/", dirname($file));
         $path = "";
@@ -87,6 +106,8 @@ class Sftp extends Server {
     }
 
     protected function recursive_remove($file_or_directory, $if_dir = false) {
+        $this->connect();
+
         $parent = dirname($file_or_directory);
         if ($this->connection->delete($file_or_directory, $if_dir)) {
             $filelist = $this->connection->nlist($parent);
@@ -101,11 +122,15 @@ class Sftp extends Server {
     }
 
     public function mkdir($file) {
+        $this->connect();
+
         $this->connection->mkdir($file);
         Helpers::logmessage("Created directory: $file");
     }
 
     public function unset_file($file) {
+        $this->connect();
+
         $this->recursive_remove($file, false);
         Helpers::logmessage("Deleted: $file");
     }

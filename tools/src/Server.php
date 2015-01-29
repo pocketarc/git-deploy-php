@@ -24,12 +24,10 @@ abstract class Server {
         $this->ignore_directories = $server['ignore_directories'];
         $this->upload_untracked = $server['upload_untracked'];
         $this->host = "{$server['scheme']}://{$server['user']}@{$server['host']}:{$server['port']}{$server['path']}";
-        $this->connect($server);
-        $this->current_commit = $this->get_file('REVISION', true);
+        $this->connect(true);
     }
 
     public function deploy(Git $git, $target_commit, $is_revert = false, $list_only = false) {
-
         if ($target_commit == $this->current_commit) {
             Helpers::logmessage("Nothing to update on: $this->host");
             return;
@@ -171,6 +169,7 @@ abstract class Server {
         }
 
         Helpers::logmessage("Finished working on: {$this->host}");
+        $this->disconnect();
     }
 
 }
