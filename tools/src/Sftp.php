@@ -17,7 +17,7 @@ class Sftp extends Server {
 
             if (isset($server['sftp_key'])) {
                 $key = new \Crypt_RSA();
-                if (isset($server['pass']) and ! empty($server['pass'])) {
+                if (isset($server['pass']) && ! empty($server['pass'])) {
                     $key->setPassword($server['pass']);
                 }
                 $key->loadKey(file_get_contents($server['sftp_key']));
@@ -113,7 +113,7 @@ class Sftp extends Server {
         if ($this->connection->delete($file_or_directory, $if_dir)) {
             $filelist = $this->connection->nlist($parent);
             foreach ($filelist as $file) {
-                if ($file != '.' and $file != '..') {
+                if ($file != '.' && $file != '..') {
                     return false;
                 }
             }

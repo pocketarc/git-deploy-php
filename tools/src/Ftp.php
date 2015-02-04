@@ -129,7 +129,7 @@ class Ftp extends Server {
             $filelist = ftp_nlist($this->connection, $file_or_directory);
 
             foreach ($filelist as $file) {
-                if ($file != '.' and $file != '..') {
+                if ($file != '.' && $file != '..') {
                     $this->recursive_remove($file);
                 }
             }

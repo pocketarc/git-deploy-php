@@ -74,7 +74,7 @@ class Config {
                     'upload_untracked' => array()
                         ), $options);
 
-                if (!isset($options['pass']) and ! isset($options['sftp_key'])) {
+                if (!isset($options['pass']) && ! isset($options['sftp_key'])) {
                     $options['pass'] = self::promptPassword();
                 }
 

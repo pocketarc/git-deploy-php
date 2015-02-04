@@ -100,7 +100,7 @@ abstract class Server {
         $count_upload = count($changes['upload']);
         $count_delete = count($changes['delete']);
 
-        if ($count_upload == 0 and $count_delete == 0) {
+        if ($count_upload == 0 && $count_delete == 0) {
             Helpers::logmessage("Nothing to update on: $this->host");
             return;
         }
