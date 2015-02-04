@@ -74,9 +74,10 @@ class Ftp extends Server {
         # Make sure the folder exists in the FTP server.
 
         $dir = explode("/", dirname($file));
+        $dir_part_count = count($dir);
         $path = "";
 
-        for ($i = 0; $i < count($dir); $i++) {
+        for ($i = 0; $i < $dir_part_count; $i++) {
             $path.= $dir[$i] . '/';
 
             if (!isset($this->existing_paths_cache[$path])) {
