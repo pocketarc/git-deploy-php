@@ -34,7 +34,7 @@ class Config {
         if (isset($opts['repo'])) {
             $repo_path = $opts['repo'];
         } else {
-            $repo_path = dirname(__FILE__) . DIRECTORY_SEPARATOR;
+            $repo_path = getcwd() . DIRECTORY_SEPARATOR;
         }
 
         return array(
