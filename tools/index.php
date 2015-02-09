@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-ini_set('memory_limit', '256M');
+ini_set('memory_limit', '-1');
 Phar::mapPhar("git-deploy");
 
 /**
