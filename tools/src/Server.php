@@ -79,7 +79,7 @@ abstract class Server {
         foreach ($changes['submodules'] as $submodule) {
             Helpers::logmessage($submodule);
             $current_subcommit = $this->get_file($submodule . '/REVISION', true);
-            $subgit = new Brunodebarros\Gitdeploy\Git($git->repo_path . $submodule . "/");
+            $subgit = new \Brunodebarros\Gitdeploy\Git($git->repo_path . $submodule . "/");
             $target_subcommit = $subgit->interpret_target_commit("HEAD");
             $subchanges = $subgit->get_changes($target_subcommit, $current_subcommit);
 
