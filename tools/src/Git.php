@@ -87,7 +87,7 @@ class Git {
 
     protected function get_file_contents($path) {
         $temp = tempnam(sys_get_temp_dir(), "git-deploy-");
-        $this->exec("show $path", "> \"$temp\"");
+        $this->exec('show "'.$path.'"', "> \"$temp\"");
         return file_get_contents($temp);
     }
 
