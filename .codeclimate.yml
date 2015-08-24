@@ -1,0 +1,19 @@
+engines:
+  eslint:
+    enabled: true
+  csslint:
+    enabled: true
+  phpcodesniffer:
+    enabled: true
+  fixme:
+    enabled: true
+
+ratings:
+   paths:
+      - tools/src/**
+      - tools/build.php
+      - tools/index.php
+
+exclude_paths:
+- tools/phpseclib0.3.9/**
+- git-deploy
