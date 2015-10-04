@@ -12,11 +12,11 @@ class Sftp extends Server {
             require_once('Crypt/RSA.php');
             require_once('Net/SFTP.php');
 
-            $this->connection = new \Net_SFTP($server['host'], $server['port'], 10);
+            $this->connection = new \phpseclib\Net\SFTP($server['host'], $server['port'], 10);
             $logged_in = false;
 
             if (isset($server['sftp_key'])) {
-                $key = new \Crypt_RSA();
+                $key = new \phpseclib\Crypt\RSA();
                 if (isset($server['pass']) && ! empty($server['pass'])) {
                     $key->setPassword($server['pass']);
                 }

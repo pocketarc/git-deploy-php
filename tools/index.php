@@ -39,7 +39,7 @@ spl_autoload_register(function ($class) {
     }
 });
 
-set_include_path(get_include_path() . PATH_SEPARATOR . 'phar://git-deploy/phpseclib0.3.9/');
+require 'phar://git-deploy/vendor/autoload.php';
 
 $args = \Brunodebarros\Gitdeploy\Config::getArgs();
 $servers = \Brunodebarros\Gitdeploy\Config::getServers($args['config_file']);
