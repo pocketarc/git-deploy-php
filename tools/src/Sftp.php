@@ -17,7 +17,7 @@ class Sftp extends Server {
 
             if (isset($server['sftp_key'])) {
                 $key = new \phpseclib\Crypt\RSA();
-                if (isset($server['pass']) && ! empty($server['pass'])) {
+                if (isset($server['pass']) && !empty($server['pass'])) {
                     $key->setPassword($server['pass']);
                 }
                 $key->loadKey(file_get_contents($server['sftp_key']));
@@ -78,7 +78,7 @@ class Sftp extends Server {
         $path = "";
 
         for ($i = 0; $i < $dir_part_count; $i++) {
-            $path.= $dir[$i] . '/';
+            $path .= $dir[$i] . '/';
 
             if (!isset($this->existing_paths_cache[$path])) {
                 $origin = $this->connection->pwd();

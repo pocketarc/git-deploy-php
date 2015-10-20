@@ -1,6 +1,7 @@
 <?php
 
 namespace Brunodebarros\Gitdeploy;
+
 use Brunodebarros\Gitdeploy\Helpers;
 
 abstract class Server {
@@ -19,8 +20,8 @@ abstract class Server {
         $this->server = $server;
         $this->clean_directories = $server['clean_directories'];
         $this->ignore_files = array_merge(array(
-            '.gitignore', '.gitattributes', '.gitmodules', 'deploy.ini', 'git-deploy', $deploy_script
-                ), $server['ignore_files']);
+            '.gitignore', '.gitattributes', '.gitmodules', 'deploy.ini', 'git-deploy', $deploy_script,
+        ), $server['ignore_files']);
         $this->ignore_directories = $server['ignore_directories'];
         $this->upload_untracked = $server['upload_untracked'];
         $this->host = "{$server['scheme']}://{$server['user']}@{$server['host']}:{$server['port']}{$server['path']}";
@@ -85,7 +86,7 @@ abstract class Server {
 
             $submodule_meta[$submodule] = array(
                 'target_subcommit' => $target_subcommit,
-                'current_subcommit' => $current_subcommit
+                'current_subcommit' => $current_subcommit,
             );
 
             foreach ($subchanges['upload'] as $file => $contents) {
@@ -164,10 +165,11 @@ abstract class Server {
         }
 
         if (isset($this->server['maintenance_file'])) {
-            if (isset($this->server['maintenance_off_value']))
+            if (isset($this->server['maintenance_off_value'])) {
                 $this->set_file($this->server['maintenance_file'], $this->server['maintenance_off_value']);
-            else
+            } else {
                 $this->unset_file($this->server['maintenance_file']);
+            }
             Helpers::logmessage("Turned maintenance mode off.");
         }
 

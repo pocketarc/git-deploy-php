@@ -1,6 +1,7 @@
 <?php
 
 namespace Brunodebarros\Gitdeploy;
+
 use Brunodebarros\Gitdeploy\Helpers;
 
 class Git {
@@ -50,7 +51,7 @@ class Git {
         $return = array(
             'upload' => array(),
             'delete' => array(),
-            'submodules' => $submodule_paths
+            'submodules' => $submodule_paths,
         );
 
         $command = str_replace(array("\n", "\r\n"), '', $command);
@@ -87,7 +88,7 @@ class Git {
 
     protected function get_file_contents($path) {
         $temp = tempnam(sys_get_temp_dir(), "git-deploy-");
-        $this->exec('show "'.$path.'"', "> \"$temp\"");
+        $this->exec('show "' . $path . '"', "> \"$temp\"");
         return file_get_contents($temp);
     }
 

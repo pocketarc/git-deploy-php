@@ -1,6 +1,7 @@
 <?php
 
 namespace Brunodebarros\Gitdeploy;
+
 use Brunodebarros\Gitdeploy\Helpers;
 
 class Config {
@@ -42,7 +43,7 @@ class Config {
             'target_commit' => isset($opts['r']) ? $opts['r'] : 'HEAD',
             'list_only' => isset($opts['l']),
             'revert' => isset($opts['revert']),
-            'repo_path' => $repo_path
+            'repo_path' => $repo_path,
         );
     }
 
@@ -71,10 +72,10 @@ class Config {
                     'clean_directories' => array(),
                     'ignore_files' => array(),
                     'ignore_directories' => array(),
-                    'upload_untracked' => array()
-                        ), $options);
+                    'upload_untracked' => array(),
+                ), $options);
 
-                if (!isset($options['pass']) && ! isset($options['sftp_key'])) {
+                if (!isset($options['pass']) && !isset($options['sftp_key'])) {
                     $options['pass'] = self::promptPassword();
                 }
 
@@ -88,7 +89,7 @@ class Config {
                     continue;
                 } else {
                     unset($options['skip']);
-                    $type = "Brunodebarros\\Gitdeploy\\".ucfirst(strtolower($options['scheme']));
+                    $type = "Brunodebarros\\Gitdeploy\\" . ucfirst(strtolower($options['scheme']));
                     $return[$uri] = new $type($options, $config_file);
                 }
             }
@@ -107,8 +108,8 @@ class Config {
         }
 
         $command = "/usr/bin/env bash -c 'read -s -p \""
-                . addslashes($prompt)
-                . "\" mypassword && echo \$mypassword'";
+            . addslashes($prompt)
+            . "\" mypassword && echo \$mypassword'";
         $password = rtrim(shell_exec($command));
         echo "\n";
 
