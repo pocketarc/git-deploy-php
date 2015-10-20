@@ -130,6 +130,11 @@ It works by modifying a file specified by the `maintenance_file` option in your 
 
 Note: It's up to your application to detect whether or not maintenance mode is on by checking the `maintenance_file`, and proceed accordingly.
 
+Some frameworks looks for a file at a specific location and shows it's maintenance page if the file exists disregarding the content of the file. The file can be deleted at the end of deployment by not setting `maintenance_off_value`.
+This example works with Laravel 5:
+    maintenance_file = 'storage/framework/down'
+    maintenance_on_value = 'Down for maintenance'
+
 How It Works
 ------------
 git-deploy stores a file called REVISION on your server. This file contains the hash of the commit that you've deployed to that server. When you run git-deploy, it downloads that file and compares the commit reference in it with the commit you're trying to deploy to find out which files to upload.

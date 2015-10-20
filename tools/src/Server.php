@@ -164,7 +164,10 @@ abstract class Server {
         }
 
         if (isset($this->server['maintenance_file'])) {
-            $this->set_file($this->server['maintenance_file'], $this->server['maintenance_off_value']);
+            if (isset($this->server['maintenance_off_value']))
+                $this->set_file($this->server['maintenance_file'], $this->server['maintenance_off_value']);
+            else
+                $this->unset_file($this->server['maintenance_file']);
             Helpers::logmessage("Turned maintenance mode off.");
         }
 
