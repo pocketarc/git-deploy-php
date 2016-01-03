@@ -1,6 +1,0 @@
-{
-    "require": {
-        "phpseclib/phpseclib": "^2.0",
-        "league/climate": "^3.2"
-    }
-}
