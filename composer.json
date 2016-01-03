@@ -1,0 +1,26 @@
+{
+    "name": "brunodebarros/git-deploy-php",
+    "description": "git-deploy-php is a simple php-based tool that deploys your Git repositories to FTP/SFTP servers, and keeps them updated automatically.",
+    "keywords": [
+        "git",
+        "deploy",
+        "ftp",
+        "sftp",
+        "php"
+    ],
+    "license": "MIT",
+    "type": "library",
+    "homepage": "http://brunodebarros.github.io/git-deploy-php/",
+    "support": {
+        "issues": "https://github.com/BrunoDeBarros/git-deploy-php/issues"
+    },
+    "authors": {
+        "name": "Bruno Moreira De Barros",
+        "email": "bruno@terraduo.com",
+        "homepage": "https://terraduo.com",
+        "role": "Developer"
+    },
+    "bin": [
+        "git-deploy"
+    ]
+}
