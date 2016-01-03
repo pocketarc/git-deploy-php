@@ -14,12 +14,44 @@
     "support": {
         "issues": "https://github.com/BrunoDeBarros/git-deploy-php/issues"
     },
-    "authors": {
-        "name": "Bruno Moreira De Barros",
-        "email": "bruno@terraduo.com",
-        "homepage": "https://terraduo.com",
-        "role": "Developer"
-    },
+    "authors": [
+        {
+            "name": "Bruno Moreira De Barros",
+            "email": "bruno@terraduo.com",
+            "homepage": "https://terraduo.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Mangirdas Skripka",
+            "email": "mangirdas@impresspages.org",
+            "homepage": "http://www.impresspages.org",
+            "role": "Developer"
+        },
+        {
+            "name": "sbtsrbayer",
+            "role": "Developer"
+        },
+        {
+            "name": "Tijmen Brommet",
+            "email": "tijmen@gmail.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Michael Naurbjerg",
+            "role": "Developer"
+        },
+        {
+            "name": "Sergey Volkov",
+            "email": "sergey.volkov.kh@yandex.ua",
+            "role": "Developer"
+        },
+        {
+            "name": "Jesse Dobbelaere",
+            "email": "jesse@dobbelaere-ae.be",
+            "homepage": "http://www.jessedobbelae.re",
+            "role": "Developer"
+        }
+    ],
     "bin": [
         "git-deploy"
     ]
