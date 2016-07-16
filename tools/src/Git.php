@@ -71,6 +71,10 @@ class Git {
                     $return['upload'][$path] = $this->get_file_contents("$target_commit:\"$path\"");
                 } elseif ($line[0] == 'D') {
                     $return['delete'][] = trim(substr($line, 1, strlen($line)));
+                } elseif ($line[0] == 'R') {
+                    $details = preg_split("/\\s+/", $line);
+                    $return['delete'][] = $details[1];
+                    $return['upload'][] = $details[2];
                 } else {
                     Helpers::error("Unknown git-diff status: {$line[0]}");
                 }
@@ -88,7 +92,7 @@ class Git {
 
     protected function get_file_contents($path) {
         $temp = tempnam(sys_get_temp_dir(), "git-deploy-");
-        $this->exec('show "' . $path . '"', "> \"$temp\"");
+        $this->exec('show ' . escapeshellarg($path), "> \"$temp\"");
         return file_get_contents($temp);
     }
 
