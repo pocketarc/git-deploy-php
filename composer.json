@@ -70,5 +70,10 @@
     },
     "config": {
         "vendor-dir": "tools/vendor"
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "php tools/build.php"
+        ]
     }
 }

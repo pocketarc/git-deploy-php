@@ -9,8 +9,6 @@ class Sftp extends Server {
     public function connect($test = false) {
         if (!$this->connection or $test) {
             $server = $this->server;
-            require_once('Crypt/RSA.php');
-            require_once('Net/SFTP.php');
 
             $this->connection = new \phpseclib\Net\SFTP($server['host'], $server['port'], 10);
             $logged_in = false;

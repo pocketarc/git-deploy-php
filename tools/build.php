@@ -35,8 +35,9 @@ if (ini_get("phar.readonly")) {
     $d = $phar->buildFromIterator(new RecursiveIteratorIterator($iterator), dirname(__FILE__));
     $phar->setStub(file_get_contents(dirname(__FILE__) . "/index.php"));
     unset($phar);
-    @unlink('../git-deploy');
-    rename('git-deploy.phar', '../git-deploy');
-    chmod('../git-deploy', 0755);
+    $path_to_git_deploy = dirname(__FILE__) . "/../git-deploy";
+    @unlink($path_to_git_deploy);
+    rename('git-deploy.phar', $path_to_git_deploy);
+    chmod($path_to_git_deploy, 0755);
     echo "Built git-deploy successfully!" . PHP_EOL;
 }
