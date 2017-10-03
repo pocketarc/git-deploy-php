@@ -29,6 +29,31 @@ abstract class Server {
     }
 
     public function deploy(Git $git, $target_commit, $is_revert = false, $list_only = false) {
+
+        if ($this->server['check_sync_with_remote'])
+        {
+            $statusTowardsRemote = $git->get_status_towards_remote($this->server['branch'], $this->server['remote_branch']);
+
+            if ($statusTowardsRemote != "up-to-date")
+            {
+                Helpers::error("In order to deploy, local and remote repository must be in sync.", false);
+                if ($statusTowardsRemote == "push-needed")
+                {
+                    Helpers::logmessage("Push your changes to the remote and come back here to retry.");
+                }
+                else if ($statusTowardsRemote == "pull-needed")
+                {
+                    Helpers::logmessage("Pull the changes from the remote and come back here to retry.");
+                }
+                else if ($statusTowardsRemote == "diverged")
+                {
+                    Helpers::logmessage("Pull the changes from the remote, merge them with yours and then push to the repository. Thereafter come back here to retry.");
+                }
+                return;
+            }
+        }
+
+
         if ($target_commit == $this->current_commit) {
             Helpers::logmessage("Nothing to update on: $this->host");
             return;

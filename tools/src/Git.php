@@ -90,6 +90,47 @@ class Git {
         return $return;
     }
 
+    // http://stackoverflow.com/a/3278427
+    public function get_status_towards_remote($local_branch, $remote_branch)
+    {
+        if (empty($local_branch))
+        {
+            $local_branch = "@";
+        }
+
+        if (empty($remote_branch))
+        {
+            $remote_branch = "@{u}";
+        }
+
+        $status;
+
+        $this->exec("remote update");
+
+        $local = $this->exec("rev-parse ".$local_branch);
+        $remote = $this->exec("rev-parse ".$remote_branch);
+        $base = $this->exec("merge-base ".$local_branch." ".$remote_branch);
+
+        if ($local == $remote)
+        {
+            $status = "up-to-date";
+        }
+        else if ($local == $base)
+        {
+            $status = "pull-needed";
+        }
+        else if ($remote == $base)
+        {
+            $status = "push-needed";
+        }
+        else
+        {
+            $status = "diverged";
+        }
+
+        return $status;
+    }
+
     protected function get_file_contents($path) {
         $temp = tempnam(sys_get_temp_dir(), "git-deploy-");
         $this->exec('show "' . $path . '"', "> \"$temp\"");

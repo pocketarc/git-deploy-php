@@ -16,12 +16,16 @@ class Helpers {
             fwrite($log_handle, $log);
         }
 
-        echo $log;
+        echo "\033[0m".$log;
     }
 
-    public static function error($message) {
-        self::logmessage("ERROR: $message");
-        die;
+    public static function error($message, $die = true) {
+        self::logmessage("\033[0;31mERROR: $message");
+
+        if ($die)
+        {
+            die();
+        }
     }
 
     public static function get_recursive_file_list($folder, $prefix = '') {

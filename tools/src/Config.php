@@ -73,7 +73,17 @@ class Config {
                     'ignore_files' => array(),
                     'ignore_directories' => array(),
                     'upload_untracked' => array(),
+                    'check_sync_with_remote' => false,
+                    'remote_branch' => null
                 ), $options);
+
+                if ($options['check_sync_with_remote'])
+                {
+                    if (empty($options['remote_branch']))
+                    {
+                        $options['remote_branch'] = (!empty($options['branch'])) ?  "origin/".$options['branch'] : null;
+                    }
+                }
 
                 if (!isset($options['pass']) && !isset($options['sftp_key'])) {
                     $options['pass'] = self::promptPassword();
