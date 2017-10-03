@@ -69,7 +69,10 @@
         "phpunit/phpunit": "^5.1"
     },
     "config": {
-        "vendor-dir": "tools/vendor"
+        "vendor-dir": "tools/vendor",
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "optimize-autoloader": false
     },
     "scripts": {
         "post-autoload-dump": [
