@@ -20,7 +20,7 @@ class Helpers {
     }
 
     public static function error($message, $die = true) {
-        self::logmessage("\033[0;31mERROR: $message");
+        self::logmessage("\033[0;31mERROR: $message\033[0m");
 
         if ($die)
         {
