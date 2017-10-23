@@ -10,7 +10,7 @@ class NonProjectFilesFilter extends RecursiveFilterIterator {
             $current = $this->current();
             $realpath = substr($current->getRealPath(), strlen(dirname(__FILE__) . DIRECTORY_SEPARATOR));
             $extension = $current->getExtension();
-            $valid_prefixes = ["src/", "vendor/composer/", "vendor/league/", "vendor/phpseclib/", "vendor/seld/"];
+            $valid_prefixes = ["src/", "vendor/composer/", "vendor/league/", "vendor/phpseclib/", "vendor/seld/", "vendor/myclabs/"];
 
             if ($realpath == "vendor/autoload.php") {
                 return true;
