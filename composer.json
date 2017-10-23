@@ -60,12 +60,10 @@
             "Brunodebarros\\Gitdeploy\\": "tools/src/"
         }
     },
-    "require": {
+    "require-dev": {
         "phpseclib/phpseclib": "^2.0",
         "league/climate": "^3.2",
-        "league/flysystem": "^1.0"
-    },
-    "require-dev": {
+        "league/flysystem": "^1.0",
         "phpunit/phpunit": "^5.1"
     },
     "config": {
