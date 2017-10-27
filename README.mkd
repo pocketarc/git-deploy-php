@@ -118,6 +118,12 @@ If you have files that you're not tracking in your repository but that you'd sti
 
 And git-deploy will automatically upload those files for you. This is super useful for things like Composer, which recommends that you don't track the vendor folder in your git repo. This way, you can have git-deploy upload the entire vendor folder to the server, and you won't need Composer installed on it.
 
+### Deploy only if the repository is in sync with the remote
+
+If the repository is maintained by more than a person and you are afraid someone makes a deploy when its local repository is not aligned with the remote, you can make git-deploy-php block the operation when this case occurs. To configure this behaviour, simply add to your .ini file the following:
+
+    check_sync_with_remote = true
+
 ### Enable maintenance mode on your website for the duration of the deployment
 
 If you want to take your website down with an "under maintenance" page to prevent users from seeing errors during the middle of a deployment, you can ask git-deploy to automatically turn maintenance mode on prior to deploying, and off at the end of the deployment.
