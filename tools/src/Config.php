@@ -109,21 +109,8 @@ class Config {
     }
 
     public static function promptPassword() {
-        $prompt = 'Enter ftp password: ';
-
-        $command = "/usr/bin/env bash -c 'echo OK'";
-        if (rtrim(shell_exec($command)) !== 'OK') {
-            trigger_error("Can't invoke bash");
-            return;
-        }
-
-        $command = "/usr/bin/env bash -c 'read -s -p \""
-            . addslashes($prompt)
-            . "\" mypassword && echo \$mypassword'";
-        $password = rtrim(shell_exec($command));
-        echo "\n";
-
-        return $password;
+        echo 'Enter ftp password: ';
+        return Seld\CliPrompt\CliPrompt::hiddenPrompt(true);
     }
 
 }
