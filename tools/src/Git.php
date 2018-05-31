@@ -75,8 +75,11 @@ class Git {
                     $details = preg_split("/\\s+/", $line);
                     $return['delete'][] = $details[1];
                     $return['upload'][] = $details[2];
+                } elseif (stristr($line, "fatal: bad object") !== false) {
+                    $commit = trim(str_ireplace("fatal: bad object", "", $line));
+                    Helpers::error("The commit '$commit' does not exist in this clone of the repo.\nFor more information, check out: https://help.github.com/articles/commit-exists-on-github-but-not-in-my-local-clone/");
                 } else {
-                    Helpers::error("Unknown git-diff status: {$line[0]}");
+                    Helpers::error("Unknown git-diff status: {$line[0]} (LINE: $line)");
                 }
             }
         } else {
