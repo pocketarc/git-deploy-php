@@ -1,0 +1,8 @@
+title: Git-deploy-php
+description: git-deploy-php is a simple php-based tool that deploys your Git repositories to FTP/SFTP servers, and keeps them updated automatically.
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-minimal
+
+gems:
+  - jekyll-mentions

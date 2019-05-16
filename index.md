@@ -1,0 +1,142 @@
+git-deploy-php 2.0
+==================
+
+git-deploy-php allows quick and easy deployments of Git repositories to FTP or SFTP servers. You DO NOT need to have git installed on the server. Great for shared servers where you have no shell access, and to save bandwidth and time by only uploading the files that have changed.
+
+Usage
+-----
+
+1. Drop `git-deploy` into your project.
+2. Create the `deploy.ini` file (see below).
+3. Run `php git-deploy` in your command line / terminal.
+
+And there you go. It's that simple.
+
+### deploy.ini
+
+In the root directory of your project, create a `deploy.ini` file.
+
+*Note: `deploy.ini` is the default file's name. You can name it anything you want (for example, `staging.ini`), and run `php git-deploy staging`. That serves as an easy way to separate the deployment to staging and production servers.*
+
+    ; This is a sample deploy.ini file.
+    
+    [example]
+    
+    skip = false
+    user = example
+    pass = password    
+    host = example.com
+    port = 21
+    path = /path/to/installation
+    passive = true
+    
+    ; If that seemed too long for you, you can specify servers like this:
+    [ftp://example:password@example.com:21/path/to/installation]
+
+The first time it's executed, git-deploy will assume that your deployment server is empty, and will upload all the files in the git repository.
+If you've already deployed your project's files previously, you have to create a REVISION file on your deployment server, containing the hash of the commit it's currently in.
+
+To get the hash of the current commit, you can use:
+
+    git rev-parse HEAD
+
+Advanced Usage
+--------------
+
+### Using SFTP
+
+To use SFTP, you have two options. With the long-form deploy.ini configuration, you just need to add `scheme = sftp`. With the short-form, you just need to change `ftp://` to `sftp://`.
+
+If you want to use a private key to login instead of a password, you can do so by adding the following to your deploy.ini configuration:
+
+    sftp_key = /path/to/key/file
+
+### Revert a deployment
+
+If you deployed using git-deploy and you want to go back to the previous deployment, all you need is `--revert`:
+
+    php git-deploy --revert [your_ini_file_name]
+
+If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), then you can simply use:
+
+    php git-deploy --revert
+
+### Deploy a specific commit
+
+    php git-deploy -r [your_commit_hash] [your_ini_file_name]
+
+If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), then you can simply use:
+
+    php git-deploy -r [your_commit_hash]
+
+Note: If you want to, instead of using a commit hash, you can use a tag, or any other valid reference.
+
+### Deploy the latest commit from different branches
+
+Sometimes you might need to deploy code from different branches to different servers (e.g. from the develop branch to the staging server, and from the master branch to the production server). This is easy to do. Add the following to your deploy.ini configuration:
+
+    branch = develop
+
+git-deploy will then always deploy the latest commit from the develop branch to the server.
+
+### List files to upload and delete
+
+Sometimes, you may just want to see what files are to be uploaded to the FTP server, and which ones are to be deleted. In this case, you can use `-l` (lowercase L):
+
+    php git-deploy -l [your_ini_file_name]
+
+If you use deploy.ini (i.e., if you didn't give the .ini file a custom name), then you can simply use:
+
+    php git-deploy -l
+
+Pretty simple, huh?
+
+### Clean remote directories automatically
+
+If you have directories you use for caching that you'd like to clear when you deploy a new commit, you can add the following to your .ini file:
+
+	clean_directories[] = folder/to/clean
+	clean_directories[] = another/folder
+
+And git-deploy will empty those directories for you.
+
+### Ignore files
+
+If you have files that you don't want uploaded to your server, you can add the following to your .ini file:
+
+	ignore_files[] = file/toignore.txt
+	ignore_files[] = another/file/toignore.php
+
+And git-deploy will ignore those files.
+
+### Upload untracked files
+
+If you have files that you're not tracking in your repository but that you'd still like to upload, you can add the following to your .ini file:
+
+	upload_untracked[] = folder/to/upload
+	upload_untracked[] = another/file/toignore.php
+
+And git-deploy will automatically upload those files for you. This is super useful for things like Composer, which recommends that you don't track the vendor folder in your git repo. This way, you can have git-deploy upload the entire vendor folder to the server, and you won't need Composer installed on it.
+
+### Enable maintenance mode on your website for the duration of the deployment
+
+If you want to take your website down with an "under maintenance" page to prevent users from seeing errors during the middle of a deployment, you can ask git-deploy to automatically turn maintenance mode on prior to deploying, and off at the end of the deployment.
+
+It works by modifying a file specified by the `maintenance_file` option in your `deploy.ini`. It'll set that file's contents to `maintenance_on_value` at the start of the deployment and then set its contents to `maintenance_off_value` at the end of the deployment. For example:
+
+    maintenance_file = 'maintenance.php'
+    maintenance_on_value = '<?php $under_maintenance = true;?>'
+    maintenance_off_value = '<?php $under_maintenance = false;?>'
+
+Note: It's up to your application to detect whether or not maintenance mode is on by checking the `maintenance_file`, and proceed accordingly.
+
+How It Works
+------------
+git-deploy stores a file called REVISION on your server. This file contains the hash of the commit that you've deployed to that server. When you run git-deploy, it downloads that file and compares the commit reference in it with the commit you're trying to deploy to find out which files to upload.
+
+git-deploy also stores a REVISION file for each submodule in your repository, as well as a PREVIOUS_REVISION file for both your repository and each submodule. This allows it to keep your submodules up-to-date, as well as to know which commit to go back to you when you run `php git-deploy --revert`.
+
+Suggestions, questions and complaints.
+----------
+
+If you've got any suggestions, questions, or anything you don't like about git-deploy, [you should create an issue here](https://github.com/BrunoDeBarros/git-deploy-php/issues). Feel free to fork this project, if you want to contribute to it. 
