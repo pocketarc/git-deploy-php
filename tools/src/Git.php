@@ -68,7 +68,7 @@ class Git {
             foreach ($result as $line) {
                 if ($line[0] == 'A' or $line[0] == 'C' or $line[0] == 'M') {
                     $path = trim(substr($line, 1, strlen($line)));
-                    $return['upload'][$path] = $this->get_file_contents("$target_commit:\"$path\"");
+                    $return['upload'][$path] = $this->get_file_contents("$target_commit:$path");
                 } elseif ($line[0] == 'D') {
                     $return['delete'][] = trim(substr($line, 1, strlen($line)));
                 } elseif ($line[0] == 'R') {
@@ -106,8 +106,6 @@ class Git {
             $remote_branch = "@{u}";
         }
 
-        $status;
-
         $this->exec("remote update");
 
         $local = $this->exec("rev-parse ".$local_branch);
@@ -136,7 +134,7 @@ class Git {
 
     protected function get_file_contents($path) {
         $temp = tempnam(sys_get_temp_dir(), "git-deploy-");
-        $this->exec('show "' . $path . '"', "> \"$temp\"");
+        $this->exec('show ' . escapeshellarg($path), "> \"$temp\"");
         return file_get_contents($temp);
     }
 
